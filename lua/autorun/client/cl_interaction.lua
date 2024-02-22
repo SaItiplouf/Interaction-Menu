@@ -1,15 +1,17 @@
 include("autorun/sh_interaction.lua")
 
+
 local anim_config = {
-    {action = "muscle", icone = "muscle.png", nom = "Muscle"},
-    {action = "dance", icone = "", nom = "Danse"},
-    {action = "becon ", icone = "", nom = "Becon"},
-    {action = "agree", icone = "", nom = "Agree"},
-    {action = "disagree", icone = "", nom = "Disagree "},
-    {action = "forward", icone = "", nom = "Forward "},
-    {action = "disagree", icone = "", nom = "Disagree "},
-    {action = "forward", icone = "", nom = "Forward "},
+    {action = "crossarm", icone = "", nom = "Bras croisés"},
+    {action = "crossarm_back", icone = "", nom = "Bras croisés(dos)"},
+    {action = "comlink", icone = "", nom = "Montre"},
+    {action = "high_five", icone = "", nom = "High Five"},
+    {action = "hololink", icone = "", nom = "Téléphone"},
+    {action = "middlefinger", icone = "", nom = "Fuck "},
+    {action = "pointindirection", icone = "", nom = "Pointer vers"},
+    {action = "salute", icone = "", nom = "Salut "},
 }
+
 
 local function OuvrirMenuPanel()
     if not menuOuvert then
@@ -97,22 +99,36 @@ for _, config in ipairs(anim_config) do
         draw.SimpleText(config.nom, "DermaDefault", w / 2, h / 2, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
 
-    if config.icone and config.icone ~= "" then -- Vérifiez si le chemin de l'icône est défini et non vide
+    if config.icone and config.icone ~= "" then
         local iconImage = vgui.Create("DImage", carre)
-        iconImage:SetSize(100, 100) -- Réglez la taille de l'image selon vos besoins
-        iconImage:SetPos((carre:GetWide() - iconImage:GetWide()) / 2, 20) -- Ajustez la position de l'image à l'intérieur du carré
-        iconImage:SetImage(config.icone) -- Définissez le chemin de l'image à afficher
-        iconImage:SetMouseInputEnabled(false) -- Désactivez l'interaction de la souris avec l'image (facultatif)
-        iconImage:SetVisible(true) -- Assurez-vous que l'image est visible
+        iconImage:SetSize(100, 100)
+        iconImage:SetPos((carre:GetWide() - iconImage:GetWide()) / 2, 20)
+        iconImage:SetImage(config.icone)
+        iconImage:SetMouseInputEnabled(false)
+        iconImage:SetVisible(true)
     end
 
-    carre.OnMousePressed = function()
-        print("Carré cliqué! Action : " .. config.action)
-        RunConsoleCommand("act", config.action)
-        frame:Close()
-        menuOuvert = false
-    end
+carre.OnMousePressed = function()
+    print("Carré cliqué! Action : " .. config.action)
+        net.Start("DemanderAnimation")
+        net.WriteString(config.action)
+        net.SendToServer()
+        print("Message envoyé au serveur.")
+        
+        -- Surveiller le mouvement après avoir lancé "dance"
+       hook.Add("Think", "SurveillerMouvementPourAnimation", function()
+           if LocalPlayer():GetVelocity():LengthSqr() > 32000 then
+                print("passage dans l'appel client")
+                net.Start("ReinitialiserOsDemande")
+                net.SendToServer()
+                hook.Remove("Think", "SurveillerMouvementPourAnimation") -- Désactiver la surveillance après détection du mouvement
+            end
+        end)
+    frame:Close()
+    menuOuvert = false
 end
+end
+
 
 frame:MakePopup()
 menuOuvert = true
