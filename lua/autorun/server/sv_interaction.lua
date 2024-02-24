@@ -1,6 +1,7 @@
 include("autorun/sh_interaction.lua")
 include("autorun/config/anims_pos.lua")
 include("autorun/config/config.lua")
+include("autorun/config/config.lua")
 
 util.AddNetworkString("DemanderAnimation")
 util.AddNetworkString("ReinitialiserOsDemande")
@@ -11,7 +12,7 @@ local ancienneArme = ""
 
 -- Fonction pour réinitialiser les os
 local function ReinitialiserOs(ply, restaurerArme, disableCam)
-    if restaurerArme then
+    if restaurerArme and Config.getLastWeapon == true then
         print("set ancienne arme" .. ancienneArme)
         ply:SelectWeapon(ancienneArme) -- Sauvegarder l'arme actuelle
     end
@@ -35,7 +36,6 @@ net.Receive("DemanderAnimation", function(len, ply)
     print("Demande d'animation " .. typeAnimation .. " reçue du client.")
 
     if IsValid(ply) and ply:IsPlayer() then
-        -- Vérifier si le joueur est déjà en animation
         if ply:GetNWBool("EnAnimation") then
             -- Vérifier si l'animation demandée est la même que celle en cours
             if ply:GetNWString("TypeAnimation") == typeAnimation then
@@ -59,38 +59,36 @@ net.Receive("DemanderAnimation", function(len, ply)
         ply:SelectWeapon(Config.SwepHand)
 
         if configurationsAnimation[typeAnimation] then
-            timer.Simple(0.5, function()
-                ply:SetNWBool("EnAnimation", true)
-                ply:SetNWString("TypeAnimation", typeAnimation) -- Stocker le type d'animation en cours
+            ply:SetNWBool("EnAnimation", true)
+            ply:SetNWString("TypeAnimation", typeAnimation) -- Stocker le type d'animation en cours
 
-                net.Start("ToggleThirdPerson")
-                net.Send(ply)
+            net.Start("ToggleThirdPerson")
+            net.Send(ply)
 
-                local anglesDesOs = configurationsAnimation[typeAnimation]
+            local anglesDesOs = configurationsAnimation[typeAnimation]
 
-                for nomOs, angleFinal in pairs(anglesDesOs) do
-                    local idOs = ply:LookupBone(nomOs)
-                    if idOs then
-                        local angleInitial = ply:GetManipulateBoneAngles(idOs) -- Obtenir l'angle initial de l'os
-                        local startTime = CurTime()
-                        local duration = 0.5 -- Durée de l'animation en secondes (à ajuster selon vos besoins)
+            for nomOs, angleFinal in pairs(anglesDesOs) do
+                local idOs = ply:LookupBone(nomOs)
+                if idOs then
+                    local angleInitial = ply:GetManipulateBoneAngles(idOs) -- Obtenir l'angle initial de l'os
+                    local startTime = CurTime()
+                    local duration = 0.5 -- Durée de l'animation en secondes (à ajuster selon vos besoins)
 
-                        timer.Create("Animation_" .. nomOs, 0.01, math.ceil(duration / 0.01), function()
-                            local elapsedTime = CurTime() - startTime
-                            local progress = math.min(1, elapsedTime / duration) -- Progression de l'animation de 0 à 1
+                    timer.Create("Animation_" .. nomOs, 0.01, math.ceil(duration / 0.01), function()
+                        local elapsedTime = CurTime() - startTime
+                        local progress = math.min(1, elapsedTime / duration) -- Progression de l'animation de 0 à 1
 
-                            -- Interpolation entre l'angle initial et l'angle final
-                            local lerpedAngle = LerpAngle(progress, angleInitial, angleFinal)
+                        -- Interpolation entre l'angle initial et l'angle final
+                        local lerpedAngle = LerpAngle(progress, angleInitial, angleFinal)
 
-                            ply:ManipulateBoneAngles(idOs, lerpedAngle)
+                        ply:ManipulateBoneAngles(idOs, lerpedAngle)
 
-                            if progress >= 1 then
-                                timer.Remove("Animation_" .. nomOs) -- Supprimer le timer une fois l'animation terminée
-                            end
-                        end)
-                    end
+                        if progress >= 1 then
+                            timer.Remove("Animation_" .. nomOs) -- Supprimer le timer une fois l'animation terminée
+                        end
+                    end)
                 end
-            end)
+            end
         end
     end
 end)
