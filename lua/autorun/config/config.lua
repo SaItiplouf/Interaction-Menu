@@ -11,8 +11,12 @@ Config = {
     TitreFont = "Trebuchet24",
     ActivateIcon = false,
     SwepHand = "weapon_tg_fists",
-    MaxDefaultActionVel = 50,
+    MaxDefaultActionVel = 30,
+    isWalkableAllowedForAllAnims = true,
     ActionWalkableVel = 150,
     getLastWeapon = false,
-    KeyBind = KEY_G
+    KeyBind = KEY_G,
+    AngleMaxWhenLocked = 25,
+    LockedCamSensitivity = 0.02,
+    LockCameraForAllAnimations = true --  NO CAM ROTATION AT ALL
 }

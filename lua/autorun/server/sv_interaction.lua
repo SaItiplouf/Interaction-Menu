@@ -1,12 +1,12 @@
 include("autorun/sh_interaction.lua")
 include("autorun/config/anims_pos.lua")
 include("autorun/config/config.lua")
-include("autorun/config/config.lua")
 
 util.AddNetworkString("DemanderAnimation")
 util.AddNetworkString("ReinitialiserOsDemande")
 util.AddNetworkString("ToggleThirdPerson")
 util.AddNetworkString("ToggleFirstPerson")
+util.AddNetworkString("BlockAtEyeTrace")
 
 local ancienneArme = ""
 
@@ -33,6 +33,8 @@ end
 
 net.Receive("DemanderAnimation", function(len, ply)
     local typeAnimation = net.ReadString()
+    local isCameraLocked = net.ReadBool()
+
     print("Demande d'animation " .. typeAnimation .. " reçue du client.")
 
     if IsValid(ply) and ply:IsPlayer() then
@@ -65,31 +67,47 @@ net.Receive("DemanderAnimation", function(len, ply)
             net.Start("ToggleThirdPerson")
             net.Send(ply)
 
-            local anglesDesOs = configurationsAnimation[typeAnimation]
+            for nomOs, value in pairs(configurationsAnimation[typeAnimation]) do
 
-            for nomOs, angleFinal in pairs(anglesDesOs) do
                 local idOs = ply:LookupBone(nomOs)
                 if idOs then
-                    local angleInitial = ply:GetManipulateBoneAngles(idOs) -- Obtenir l'angle initial de l'os
-                    local startTime = CurTime()
-                    local duration = 0.5 -- Durée de l'animation en secondes (à ajuster selon vos besoins)
-
-                    timer.Create("Animation_" .. nomOs, 0.01, math.ceil(duration / 0.01), function()
-                        local elapsedTime = CurTime() - startTime
-                        local progress = math.min(1, elapsedTime / duration) -- Progression de l'animation de 0 à 1
-
-                        -- Interpolation entre l'angle initial et l'angle final
-                        local lerpedAngle = LerpAngle(progress, angleInitial, angleFinal)
-
-                        ply:ManipulateBoneAngles(idOs, lerpedAngle)
-
-                        if progress >= 1 then
-                            timer.Remove("Animation_" .. nomOs) -- Supprimer le timer une fois l'animation terminée
+                    -- Manipuler l'angle si il est spécifié
+                    if type(value) == "table" then
+                        if isCameraLocked == true then
+                            net.Start("BlockAtEyeTrace")
+                            net.Send(ply)
                         end
-                    end)
+
+                        local angleInitial = ply:GetManipulateBoneAngles(idOs)
+                        local angleFinal = value.Angle or angleInitial -- Utiliser l'angle initial si aucun angle n'est spécifié
+                        local position = value.Position -- Récupérer la position si elle est spécifiée
+
+                        local startTime = CurTime()
+                        local duration = 0.5 -- Durée de l'animation en secondes (à ajuster selon vos besoins)
+
+                        timer.Create("Animation_" .. nomOs, 0.01, math.ceil(duration / 0.01), function()
+                            local elapsedTime = CurTime() - startTime
+                            local progress = math.min(1, elapsedTime / duration) -- Progression de l'animation de 0 à 1
+
+                            -- Interpolation entre l'angle initial et l'angle final
+                            local lerpedAngle = LerpAngle(progress, angleInitial, angleFinal)
+
+                            ply:ManipulateBoneAngles(idOs, lerpedAngle)
+
+                            -- Manipuler la position si elle est spécifiée
+                            if position then
+                                ply:ManipulateBonePosition(idOs, position)
+                            end
+
+                            if progress >= 1 then
+                                timer.Remove("Animation_" .. nomOs) -- Supprimer le timer une fois l'animation terminée
+                            end
+                        end)
+                    end
                 end
             end
         end
+
     end
 end)
 

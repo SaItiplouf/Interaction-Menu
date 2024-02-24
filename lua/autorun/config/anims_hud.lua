@@ -2,40 +2,96 @@ anim_config = {{
     action = "crossarm",
     icone = "muscle.png",
     nom = "Bras croisés",
-    IsWalkable = true
+    IsWalkable = true,
+    cameraLocked = false
 }, {
     action = "crossarm_back",
     icone = "",
     nom = "Bras croisés(dos)",
-    IsWalkable = true
+    IsWalkable = true,
+    cameraLocked = false
 }, {
     action = "comlink",
     icone = "muscle.png",
     nom = "Montre",
-    IsWalkable = false
+    IsWalkable = false,
+    cameraLocked = false
 }, {
     action = "high_five",
     icone = "",
     nom = "High Five",
-    IsWalkable = false
+    IsWalkable = false,
+    cameraLocked = false
 }, {
     action = "hololink",
     icone = "",
     nom = "Téléphone",
-    IsWalkable = false
+    IsWalkable = false,
+    cameraLocked = false
 }, {
     action = "middlefinger",
     icone = "",
     nom = "Fuck",
-    IsWalkable = true
+    IsWalkable = true,
+    cameraLocked = false
 }, {
     action = "pointindirection",
     icone = "",
     nom = "Pointer vers",
-    IsWalkable = true
+    IsWalkable = true,
+    cameraLocked = false
 }, {
     action = "salute",
     icone = "",
     nom = "Salut",
-    IsWalkable = false
+    IsWalkable = false,
+    cameraLocked = false
+}, {
+    action = "typingcomputer",
+    icone = "",
+    nom = "Dactoly",
+    IsWalkable = false,
+    cameraLocked = false
+}, {
+    action = "surrendhand",
+    icone = "",
+    nom = "Main sur la tête",
+    IsWalkable = false,
+    cameraLocked = true
+}, {
+    action = "checkhand",
+    icone = "",
+    nom = "Serrer la main",
+    IsWalkable = false,
+    cameraLocked = true
+}, {
+    action = "OnTheGround",
+    icone = "",
+    nom = "Ater",
+    IsWalkable = false,
+    cameraLocked = true
+}, {
+    action = "surrender",
+    icone = "",
+    nom = "Surrender",
+    IsWalkable = false,
+    cameraLocked = true
+}, {
+    action = "metalrock",
+    icone = "",
+    nom = "Metal",
+    IsWalkable = true,
+    cameraLocked = false
+}, {
+    action = "waitingarm",
+    icone = "",
+    nom = "Attendant",
+    IsWalkable = true,
+    cameraLocked = false
+}, {
+    action = "healing",
+    icone = "",
+    nom = "Premiers secours",
+    IsWalkable = true,
+    cameraLocked = false
 }}

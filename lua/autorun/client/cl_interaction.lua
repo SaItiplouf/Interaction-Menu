@@ -4,6 +4,7 @@ include("autorun/config/anims_pos.lua")
 include("autorun/config/config.lua")
 
 local previewAnim = ""
+local originalViewAngle = nil
 
 local function CreerFrameMenuAnim(parentPanel)
     local frame = vgui.Create("DFrame", parentPanel)
@@ -53,20 +54,35 @@ local function CreerModelEtExtensionPanel(parentPanel, frame)
     modelPanel:SetFOV(50)
     function modelPanel:LayoutEntity(ent)
         local animConfig = configurationsAnimation[previewAnim]
-        if animConfig then
-            for bone, angle in pairs(animConfig) do
-                local boneIndex = ent:LookupBone(bone)
-                if boneIndex and angle then
-                    ent:ManipulateBoneAngles(boneIndex, angle)
-                end
-            end
-        else
+
+        if not animConfig then
             for i = 0, ent:GetBoneCount() - 1 do
                 ent:ManipulateBoneAngles(i, Angle(0, 0, 0))
+                ent:ManipulateBonePosition(i, Vector(0, 0, 0))
+            end
+            return
+        end
+
+        for nomOs, value in pairs(animConfig) do
+            local idOs = ent:LookupBone(nomOs)
+            if idOs then
+                -- Manipuler l'angle si il est spécifié
+                if type(value) == "table" then
+                    local angleInitial = ent:GetManipulateBoneAngles(idOs)
+                    local angleFinal = value.Angle or angleInitial -- Utiliser l'angle initial si aucun angle n'est spécifié
+                    local position = value.Position -- Récupérer la position si elle est spécifiée
+
+                    ent:ManipulateBoneAngles(idOs, angleFinal)
+
+                    -- Manipuler la position si elle est spécifiée
+                    if position then
+                        ent:ManipulateBonePosition(idOs, position)
+                    end
+
+                end
             end
         end
     end
-
     modelPanel:SetAmbientLight(Color(60, 60, 60, 255))
     modelPanel:SetAnimated(false)
 
@@ -106,6 +122,19 @@ local function ImportScrollPanel(frame)
     end
     return scrollPanel
 end
+
+local function myHook()
+    if IsValid(LocalPlayer()) then
+        angle = LocalPlayer():EyeAngles()
+        local ccmd = LocalPlayer():GetCurrentCommand()
+        if ccmd then
+            ccmd:SetViewAngles(angle) -- Rétablir l'angle de vue initial
+        end
+    end
+
+    hook.Remove("GetCmdAndResetViewAngle", "RetirerLeHookApresExec")
+end
+
 local function OuvrirMenuPanel()
     if not menuOuvert then
 
@@ -142,7 +171,7 @@ local function OuvrirMenuPanel()
         iconLayout:SetSpaceY(5) -- Espacement vertical entre les carrés
         for _, config in ipairs(anim_config) do
             local carre = iconLayout:Add("DPanel")
-            carre:SetSize(135, 150)
+            carre:SetSize(130, 150)
             carre.Paint = function(self, w, h)
                 draw.RoundedBox(6, 0, 0, w, h, self:IsHovered() and Config.bgHoverButton or Config.bgButton)
                 draw.SimpleText(config.nom, Config.FontButton, w / 2, h / 2, Config.ColorTextButton, TEXT_ALIGN_CENTER,
@@ -175,8 +204,55 @@ local function OuvrirMenuPanel()
                                            LocalPlayer():GetActiveWeapon():GetClass() or ""
                 net.Start("DemanderAnimation")
                 net.WriteString(config.action)
+
+                if Config.LockCameraForAllAnimations == true then
+                    net.WriteBool(true)
+                else
+                    net.WriteBool(config.cameraLocked)
+                    originalViewAngle = LocalPlayer():EyeAngles()
+                    print(originalViewAngle)
+                end
                 net.SendToServer()
                 print("Message envoyé au serveur.")
+
+                local lockedYaw = nil
+                local yawOffset = Config.AngleMaxWhenLocked
+
+                net.Receive("BlockAtEyeTrace", function()
+                    -- Verrouiller l'angle de vue lorsque le joueur entre dans le hook
+                    local ply = LocalPlayer()
+                    local eyeAngles = ply:EyeAngles()
+                    lockedYaw = eyeAngles.yaw
+                end)
+
+                hook.Add("InputMouseApply", "LockToYawOnly", function(ccmd, x, y, angle)
+                    if lockedYaw ~= nil then
+                        -- Si l'angle est verrouillé, autoriser le mouvement horizontal avec une petite marge
+                        local currentAngle = ccmd:GetViewAngles()
+                        local sensitivity = Config.LockedCamSensitivity -- Ajustez la sensibilité selon vos préférences
+                        local horizontalOffset = Config.AngleMaxWhenLocked -- Offset autorisé horizontalement par rapport à l'angle verrouillé
+
+                        -- Calculer le nouvel angle de vue en fonction du mouvement horizontal de la souris
+                        local newYaw = currentAngle.yaw + x * sensitivity
+
+                        -- Gérer les cas où l'angle dépasse une rotation complète (360 degrés)
+                        if newYaw - lockedYaw > 180 then
+                            lockedYaw = lockedYaw + 360
+                        elseif newYaw - lockedYaw < -180 then
+                            lockedYaw = lockedYaw - 360
+                        end
+
+                        -- Limiter les angles de vue dans la plage autorisée autour de l'angle verrouillé
+                        local minAngle = lockedYaw - horizontalOffset
+                        local maxAngle = lockedYaw + horizontalOffset
+                        local clampedYaw = math.Clamp(newYaw, minAngle, maxAngle)
+
+                        -- Appliquer les nouveaux angles de vue
+                        ccmd:SetViewAngles(Angle(currentAngle.pitch, clampedYaw, currentAngle.roll))
+
+                        return true
+                    end
+                end)
 
                 hook.Add("Think", "SurveillerMouvementEtArmePourAnimation", function()
                     local joueur = LocalPlayer()
@@ -184,15 +260,21 @@ local function OuvrirMenuPanel()
                     -- Vérifier si le joueur a bougé rapidement, changé d'arme ou s'est accroupi
                     local armeActuelle = IsValid(joueur:GetActiveWeapon()) and joueur:GetActiveWeapon():GetClass() or ""
                     local estAccroupi = joueur:Crouching()
+                    local nAppuiePasSurUse = joueur:KeyDown(IN_USE)
 
-                    MaxVelForAction = config.IsWalkable and Config.ActionWalkableVel or Config.MaxDefaultActionVel
+                    if config.IsWalkable == true and Config.isWalkableAllowedForAllAnims == true then
+                        MaxVelForAction = Config.ActionWalkableVel
+                    else
+                        MaxVelForAction = Config.MaxDefaultActionVel
+                    end
                     if joueur:GetVelocity():Length() > MaxVelForAction or
-                        (armePrecedente ~= armeActuelle and armeActuelle ~= Config.SwepHand) or estAccroupi then
-                        print(
-                            "Mouvement rapide détecté ou changement d'arme différent des mains ou accroupissement. Envoi de la demande de réinitialisation des os.")
+                        (armePrecedente ~= armeActuelle and armeActuelle ~= Config.SwepHand) or estAccroupi or
+                        nAppuiePasSurUse then
+                        hook.Remove("InputMouseApply", "LockToYawOnly")
                         net.Start("ReinitialiserOsDemande")
                         net.SendToServer()
                         hook.Remove("Think", "SurveillerMouvementEtArmePourAnimation")
+                        hook.Add("GetCmdAndResetViewAngle", "RetirerLeHookApresExec", myHook) -- Remplacez "GetCmdAndResetViewAngle" par le nom du hook que vous souhaitez utiliser
                     end
                 end)
                 parentPanel:Remove()
