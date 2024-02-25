@@ -6,6 +6,40 @@ include("autorun/config/config.lua")
 local previewAnim = ""
 local originalViewAngle = nil
 
+local function RetirerSurveillanceApresReponse()
+    hook.Remove("Think", "SurveillerMouvementEtArmePourAnimation")
+end
+
+local function sleepingAnim()
+    local offset = Vector(0, 10, 20) -- Ajustez cet offset selon vos besoins pour placer les particules où vous le souhaitez par rapport au modèle du joueur
+    local pos = ply:GetPos() + offset -- Position au niveau du playermodel du joueur
+    local emitter = ParticleEmitter(pos)
+
+    if emitter then
+        local currentTime = CurTime()
+        local lastParticleTime = ply.lastParticleTime or 0
+
+        if currentTime - lastParticleTime >= 2 then -- Emit a particle every 3 seconds
+            ply.lastParticleTime = currentTime
+
+            local particle = emitter:Add("sleeping_particle.vmt", pos)
+            if particle then
+                particle:SetVelocity(Vector(math.random(-10, 10), math.random(-10, 10), math.random(1, 2)))
+                particle:SetDieTime(3)
+                particle:SetStartAlpha(255)
+                particle:SetEndAlpha(0)
+                particle:SetStartSize(5) -- Augmentez la taille de départ
+                particle:SetEndSize(10)
+                particle:SetGravity(Vector(0, 0, 10))
+                particle:SetColor(255, 0, 0)
+                particle:SetCollide(true)
+                particle:SetBounce(2)
+            end
+
+            emitter:Finish()
+        end
+    end
+end
 local function CreerFrameMenuAnim(parentPanel)
     local frame = vgui.Create("DFrame", parentPanel)
     frame:SetSize(600, 390)
@@ -171,7 +205,7 @@ local function OuvrirMenuPanel()
         iconLayout:SetSpaceY(5) -- Espacement vertical entre les carrés
         for _, config in ipairs(anim_config) do
             local carre = iconLayout:Add("DPanel")
-            carre:SetSize(130, 150)
+            carre:SetSize(105, 105)
             carre.Paint = function(self, w, h)
                 draw.RoundedBox(6, 0, 0, w, h, self:IsHovered() and Config.bgHoverButton or Config.bgButton)
                 draw.SimpleText(config.nom, Config.FontButton, w / 2, h / 2, Config.ColorTextButton, TEXT_ALIGN_CENTER,
@@ -210,7 +244,6 @@ local function OuvrirMenuPanel()
                 else
                     net.WriteBool(config.cameraLocked)
                     originalViewAngle = LocalPlayer():EyeAngles()
-                    print(originalViewAngle)
                 end
                 net.SendToServer()
                 print("Message envoyé au serveur.")
@@ -255,6 +288,10 @@ local function OuvrirMenuPanel()
                 end)
 
                 hook.Add("Think", "SurveillerMouvementEtArmePourAnimation", function()
+
+                    if ply:Alive() and config.sleepingAnimation then
+                        sleepingAnim()
+                    end
                     local joueur = LocalPlayer()
 
                     -- Vérifier si le joueur a bougé rapidement, changé d'arme ou s'est accroupi
@@ -273,8 +310,11 @@ local function OuvrirMenuPanel()
                         hook.Remove("InputMouseApply", "LockToYawOnly")
                         net.Start("ReinitialiserOsDemande")
                         net.SendToServer()
-                        hook.Remove("Think", "SurveillerMouvementEtArmePourAnimation")
-                        hook.Add("GetCmdAndResetViewAngle", "RetirerLeHookApresExec", myHook) -- Remplacez "GetCmdAndResetViewAngle" par le nom du hook que vous souhaitez utiliser
+                        net.Receive("CallbackReset", function()
+                            RetirerSurveillanceApresReponse()
+                        end)
+                        hook.Add("GetCmdAndResetViewAngle", "RetirerLeHookApresExec", myHook)
+
                     end
                 end)
                 parentPanel:Remove()

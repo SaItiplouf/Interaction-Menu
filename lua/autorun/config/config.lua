@@ -18,5 +18,5 @@ Config = {
     KeyBind = KEY_G,
     AngleMaxWhenLocked = 25,
     LockedCamSensitivity = 0.02,
-    LockCameraForAllAnimations = true --  NO CAM ROTATION AT ALL
+    LockCameraForAllAnimations = false --  NO CAM ROTATION AT ALL
 }

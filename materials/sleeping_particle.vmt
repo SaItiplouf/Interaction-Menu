@@ -1,0 +1,6 @@
+"UnlitGeneric"
+{
+    "$basetexture" "sleeping_particle"
+    "$translucent" 1
+    "$nocull" 1 
+}

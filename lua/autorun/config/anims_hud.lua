@@ -22,17 +22,24 @@ anim_config = {{
     nom = "High Five",
     IsWalkable = false,
     cameraLocked = false
-}, {
-    action = "hololink",
-    icone = "",
-    nom = "Téléphone",
-    IsWalkable = false,
-    cameraLocked = false
-}, {
+}, --  {
+--     action = "hololink",
+--     icone = "",
+--     nom = "Téléphone",
+--     IsWalkable = false,
+--     cameraLocked = false
+-- }, 
+{
     action = "middlefinger",
     icone = "",
     nom = "Fuck",
     IsWalkable = true,
+    cameraLocked = false
+}, {
+    action = "thinking",
+    icone = "",
+    nom = "Pensant",
+    IsWalkable = false,
     cameraLocked = false
 }, {
     action = "pointindirection",
@@ -67,7 +74,7 @@ anim_config = {{
 }, {
     action = "OnTheGround",
     icone = "",
-    nom = "Ater",
+    nom = "Se rendre au sol",
     IsWalkable = false,
     cameraLocked = true
 }, {
@@ -82,6 +89,13 @@ anim_config = {{
     nom = "Metal",
     IsWalkable = true,
     cameraLocked = false
+}, {
+    action = "sleeping",
+    icone = "",
+    nom = "Dormir",
+    IsWalkable = false,
+    cameraLocked = true,
+    sleepingAnimation = true
 }, {
     action = "waitingarm",
     icone = "",

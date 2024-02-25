@@ -7,6 +7,7 @@ util.AddNetworkString("ReinitialiserOsDemande")
 util.AddNetworkString("ToggleThirdPerson")
 util.AddNetworkString("ToggleFirstPerson")
 util.AddNetworkString("BlockAtEyeTrace")
+util.AddNetworkString("CallbackReset")
 
 local ancienneArme = ""
 
@@ -114,6 +115,9 @@ end)
 net.Receive("ReinitialiserOsDemande", function(len, ply)
     if IsValid(ply) and ply:IsPlayer() then
         ReinitialiserOs(ply, true)
+
+        net.Start("CallbackReset")
+        net.Send(ply)
     end
 end)
 
