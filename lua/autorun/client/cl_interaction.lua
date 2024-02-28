@@ -5,29 +5,32 @@ include("autorun/config/config.lua")
 local previewAnim = ""
 local function ResetBonesEtRetirerLeHook()
     hook.Remove("Think", "SurveillerMouvementEtArmePourAnimation")
-    local function WaitForReadyToReset()
-        if ply:GetNWBool("ReadyToReset") then
-            net.Start("ReinitialiserOsDemande")
-            net.SendToServer()
-            return
-        else
-            timer.Simple(0.005, WaitForReadyToReset)
-            print("blocked")
-        end
-    end
-
-    WaitForReadyToReset()
+    net.Start("ReinitialiserOsDemande")
+    net.SendToServer()
 end
 
-local function sleepingAnim()
-    local offset = Vector(0, 10, 20) -- Ajustez cet offset selon vos besoins pour placer les particules où vous le souhaitez par rapport au modèle du joueur
-    local pos = ply:GetPos() + offset -- Position au niveau du playermodel du joueur
+local function sleepingAnim(ent)
+    if not IsValid(ent) or not ent:Alive() then return end
+    -- Obtenez la position du bone "ValveBiped.Bip01_Head1" de l'entité
+    local boneIndex = ent:LookupBone("ValveBiped.Bip01_Head1")
+    if not boneIndex then -- Vérifiez si le bone existe
+        return
+    end
+
+    local bonePos, boneAng = ent:GetBonePosition(boneIndex)
+    if not bonePos then -- Vérifiez si vous avez pu obtenir la position du bone
+        return
+    end
+
+    local offset = Vector(0, 0, -15)
+    -- Ajustez cet offset selon vos besoins pour placer les particules par rapport au bone
+    local pos = bonePos + boneAng:Forward() * offset.x + boneAng:Right() * offset.y + boneAng:Up() * offset.z
     local emitter = ParticleEmitter(pos)
     if emitter then
         local currentTime = CurTime()
-        local lastParticleTime = ply.lastParticleTime or 0
+        local lastParticleTime = ent.lastParticleTime or 0
         if currentTime - lastParticleTime >= 2 then -- Emit a particle every 3 seconds
-            ply.lastParticleTime = currentTime
+            ent.lastParticleTime = currentTime
             local particle = emitter:Add("sleeping_particle.vmt", pos)
             if particle then
                 particle:SetVelocity(Vector(math.random(-10, 10), math.random(-10, 10), math.random(1, 2)))
@@ -41,8 +44,6 @@ local function sleepingAnim()
                 particle:SetCollide(true)
                 particle:SetBounce(2)
             end
-
-            emitter:Finish()
         end
     end
 end
@@ -210,7 +211,7 @@ local function OuvrirMenuPanel()
             end
 
             carre.OnMousePressed = function()
-                if LocalPlayer():GetVelocity():LengthSqr() > 1 then
+                if LocalPlayer():GetVelocity():LengthSqr() > 1 or ply:InVehicle() then
                     return -- Retourner si la vélocité du joueur est supérieure à 0
                 end
 
@@ -218,24 +219,17 @@ local function OuvrirMenuPanel()
                 local armePrecedente = IsValid(LocalPlayer():GetActiveWeapon()) and LocalPlayer():GetActiveWeapon():GetClass() or ""
                 net.Start("DemanderAnimation")
                 net.WriteString(config.action)
-                if Config.LockCameraForAllAnimations == true then
-                    net.WriteBool(true)
-                else
-                    net.WriteBool(config.cameraLocked)
+                local lockedYaw = nil
+                if Config.LockCameraForAllAnimations == true or config.cameraLocked == true then
+                    ply = LocalPlayer()
                     originalViewAngle = LocalPlayer():EyeAngles()
+                    local eyeAngles = ply:EyeAngles()
+                    lockedYaw = eyeAngles.yaw
+                    yawOffset = Config.AngleMaxWhenLocked
                 end
 
                 net.SendToServer()
                 print("Message envoyé au serveur.")
-                local lockedYaw = nil
-                yawOffset = Config.AngleMaxWhenLocked
-                net.Receive("BlockAtEyeTrace", function()
-                    -- Verrouiller l'angle de vue lorsque le joueur entre dans le hook
-                    ply = LocalPlayer()
-                    local eyeAngles = ply:EyeAngles()
-                    lockedYaw = eyeAngles.yaw
-                end)
-
                 hook.Add("InputMouseApply", "LockToYawOnly", function(ccmd, x, y, angle)
                     if lockedYaw ~= nil then
                         -- Si l'angle est verrouillé, autoriser le mouvement horizontal avec une petite marge
@@ -257,7 +251,6 @@ local function OuvrirMenuPanel()
                 end)
 
                 hook.Add("Think", "SurveillerMouvementEtArmePourAnimation", function()
-                    if ply:Alive() and config.sleepingAnimation then sleepingAnim() end
                     local joueur = LocalPlayer()
                     -- Vérifier si le joueur a bougé rapidement, changé d'arme ou s'est accroupi
                     local armeActuelle = IsValid(joueur:GetActiveWeapon()) and joueur:GetActiveWeapon():GetClass() or ""
@@ -287,10 +280,53 @@ local function OuvrirMenuPanel()
 end
 
 local function VerifierTouchePressee()
-    if input.IsKeyDown(KEY_G) then OuvrirMenuPanel() end
+    local ply = LocalPlayer()
+    if input.IsKeyDown(KEY_G) and not ply:InVehicle() then
+        OuvrirMenuPanel() -- Ouvrir le menu
+    end
 end
 
 net.Receive("ToggleThirdPerson", function() RunConsoleCommand("thirdperson") end)
 net.Receive("ToggleFirstPerson", function() RunConsoleCommand("firstperson") end)
 hook.Add("Think", "VerifierTouchePressee", VerifierTouchePressee)
-hook.Add("EntityNetworkedVarChanged", "printchange", print)
+local function OnPlayerNetworkedVarChanged(ent, name, oldVal, newVal)
+    print("Le joueur " .. ent:Nick() .. " a changé la valeur de la netvar '" .. name .. "' de '" .. tostring(oldVal) .. "' à '" .. tostring(newVal) .. "'.")
+    if name == "AnimName" and ent:IsPlayer() and ent:Alive() then
+        if newVal == "Empty" then
+            GetBonesAnglesPositionsAndResetThem(ent)
+            if ent == LocalPlayer() then
+                net.Start("ResetCamOnSameAnim")
+                net.SendToServer()
+            else
+                print("Aren't concerned by anim reset")
+            end
+
+            if oldVal == "sleeping" and ent:Alive() then
+                timer.Remove("SleepingParticleEmitterTimer_" .. ent:EntIndex()) -- Retire le timer spécifique à cette entité
+            end
+        else
+            if configurationsAnimation[newVal] then
+                if oldVal ~= "Empty" then
+                    -- resetting bones before new anim to avoid glitching
+                    GetBonesAnglesPositionsAndResetThem(ent)
+                end
+
+                if newVal == "sleeping" and ent:Alive() then
+                    local timerName = "SleepingParticleEmitterTimer_" .. ent:EntIndex() -- Nom unique du timer pour cette entité
+                    timer.Create(timerName, 1, 0, function() sleepingAnim(ent) end)
+                else
+                    local timerName = "SleepingParticleEmitterTimer_" .. ent:EntIndex() -- Nom unique du timer pour cette entité
+                    timer.Remove(timerName)
+                end
+
+                -- Appelez la fonction ManipulateBoneOnShared avec les informations nécessaires
+                ManipulateBoneOnShared(ent, newVal)
+            end
+        end
+    else
+        print("error")
+    end
+end
+
+-- Ajoutez le hook pour surveiller les changements de netvars du joueur local
+hook.Add("EntityNetworkedVarChanged", "MonitorPlayerNetworkedVarChanges", OnPlayerNetworkedVarChanged)

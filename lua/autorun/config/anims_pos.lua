@@ -188,93 +188,93 @@ configurationsAnimation = {
         }
     },
     surrender = {
-        ['ValveBiped.Bip01_R_Calf'] = {
+        ["ValveBiped.Bip01_R_Calf"] = {
             Angle = Angle(0, 120, 0)
         },
-        ['ValveBiped.Bip01_L_Calf'] = {
+        ["ValveBiped.Bip01_L_Calf"] = {
             Angle = Angle(0, 120, 0)
         },
-        ['ValveBiped.Bip01_R_Thigh'] = {
+        ["ValveBiped.Bip01_R_Thigh"] = {
             Angle = Angle(0, -30, 0)
         },
-        ['ValveBiped.Bip01_L_Thigh'] = {
+        ["ValveBiped.Bip01_L_Thigh"] = {
             Angle = Angle(0, -30, 0)
         },
-        ['ValveBiped.Bip01_R_Foot'] = {
+        ["ValveBiped.Bip01_R_Foot"] = {
             Angle = Angle(0, 30, 0)
         },
-        ['ValveBiped.Bip01_L_Foot'] = {
+        ["ValveBiped.Bip01_L_Foot"] = {
             Angle = Angle(0, 30, 0)
         },
-        ['ValveBiped.Bip01_R_UpperArm'] = {
+        ["ValveBiped.Bip01_R_UpperArm"] = {
             Angle = Angle(30, 0, 90)
         },
-        ['ValveBiped.Bip01_L_UpperArm'] = {
+        ["ValveBiped.Bip01_L_UpperArm"] = {
             Angle = Angle(-30, 0, -90)
         },
-        ['ValveBiped.Bip01_R_ForeArm'] = {
+        ["ValveBiped.Bip01_R_ForeArm"] = {
             Angle = Angle(0, -130, 0)
         },
-        ['ValveBiped.Bip01_L_ForeArm'] = {
+        ["ValveBiped.Bip01_L_ForeArm"] = {
             Angle = Angle(0, -120, 20)
         },
-        ['ValveBiped.Bip01_Pelvis'] = {
+        ["ValveBiped.Bip01_Pelvis"] = {
             Position = Vector(0, 0, -20)
         }
     },
     surrendhand = {
-        ['ValveBiped.Bip01_R_Calf'] = {
+        ["ValveBiped.Bip01_R_Calf"] = {
             Angle = Angle(5, 120, 0)
         },
-        ['ValveBiped.Bip01_L_Calf'] = {
+        ["ValveBiped.Bip01_L_Calf"] = {
             Angle = Angle(-5, 120, 0)
         },
-        ['ValveBiped.Bip01_R_Thigh'] = {
+        ["ValveBiped.Bip01_R_Thigh"] = {
             Angle = Angle(0, -30, 0)
         },
-        ['ValveBiped.Bip01_L_Thigh'] = {
+        ["ValveBiped.Bip01_L_Thigh"] = {
             Angle = Angle(0, -30, 0)
         },
-        ['ValveBiped.Bip01_R_Foot'] = {
+        ["ValveBiped.Bip01_R_Foot"] = {
             Angle = Angle(0, 30, 0)
         },
-        ['ValveBiped.Bip01_L_Foot'] = {
+        ["ValveBiped.Bip01_L_Foot"] = {
             Angle = Angle(0, 30, 0)
         },
-        ['ValveBiped.Bip01_R_UpperArm'] = {
+        ["ValveBiped.Bip01_R_UpperArm"] = {
             Angle = Angle(110, 9, 90)
         },
-        ['ValveBiped.Bip01_L_UpperArm'] = {
+        ["ValveBiped.Bip01_L_UpperArm"] = {
             Angle = Angle(-110, 9, -90)
         },
-        ['ValveBiped.Bip01_R_ForeArm'] = {
+        ["ValveBiped.Bip01_R_ForeArm"] = {
             Angle = Angle(12, -110, 20)
         },
-        ['ValveBiped.Bip01_L_ForeArm'] = {
+        ["ValveBiped.Bip01_L_ForeArm"] = {
             Angle = Angle(-12, -110, 20)
         },
         ["ValveBiped.Bip01_Head1"] = {
             Angle = Angle(0.00, -5, 0.00)
         },
-        ['ValveBiped.Bip01_Pelvis'] = {
+        ["ValveBiped.Bip01_Pelvis"] = {
             Position = Vector(0, 0, -20)
         }
     },
     OnTheGround = {
-        ['ValveBiped.Bip01_Pelvis'] = {
+        ["ValveBiped.Bip01_Pelvis"] = {
             Position = Vector(0, 0, -32),
             Angle = Angle(0, 0, 90)
         },
-        ['ValveBiped.Bip01_R_UpperArm'] = {
+        ["ValveBiped.Bip01_R_UpperArm"] = {
             Angle = Angle(130, 0, 0)
         },
-        ['ValveBiped.Bip01_L_UpperArm'] = {
+        ["ValveBiped.Bip01_L_UpperArm"] = {
             Angle = Angle(-130, 0, 0)
         },
-        ['ValveBiped.Bip01_R_ForeArm'] = {
+        ["ValveBiped.Bip01_R_ForeArm"] = {
             Angle = Angle(125, -8.5, 0)
         },
-        ['ValveBiped.Bip01_L_ForeArm'] = {
+        ["ValveBiped.Bip01_L_ForeArm"] = {
             Angle = Angle(-125, -8.5, 0)
         },
         ["ValveBiped.Bip01_L_Hand"] = {
@@ -288,44 +288,44 @@ configurationsAnimation = {
         }
     },
     healing = {
-        ['ValveBiped.Bip01_Pelvis'] = {
+        ["ValveBiped.Bip01_Pelvis"] = {
             Position = Vector(0, 0, -17),
             Angle = Angle(0, 0, 30)
         },
-        ['ValveBiped.Bip01_R_Calf'] = {
+        ["ValveBiped.Bip01_R_Calf"] = {
             Angle = Angle(10, 80, 0)
         },
-        ['ValveBiped.Bip01_L_Calf'] = {
+        ["ValveBiped.Bip01_L_Calf"] = {
             Angle = Angle(-10, 80, 0)
         },
-        ['ValveBiped.Bip01_R_Thigh'] = {
+        ["ValveBiped.Bip01_R_Thigh"] = {
             Angle = Angle(0, -30, 0)
         },
-        ['ValveBiped.Bip01_L_Thigh'] = {
+        ["ValveBiped.Bip01_L_Thigh"] = {
             Angle = Angle(0, -30, 0)
         },
-        ['ValveBiped.Bip01_R_Foot'] = {
+        ["ValveBiped.Bip01_R_Foot"] = {
             Angle = Angle(0, 0, 17)
         },
-        ['ValveBiped.Bip01_L_Foot'] = {
+        ["ValveBiped.Bip01_L_Foot"] = {
             Angle = Angle(0, 0, -25)
         },
-        ['ValveBiped.Bip01_R_UpperArm'] = {
+        ["ValveBiped.Bip01_R_UpperArm"] = {
             Angle = Angle(15, -50, 0)
         },
-        ['ValveBiped.Bip01_L_UpperArm'] = {
+        ["ValveBiped.Bip01_L_UpperArm"] = {
             Angle = Angle(-15, -50, 0)
         },
-        ['ValveBiped.Bip01_R_ForeArm'] = {
+        ["ValveBiped.Bip01_R_ForeArm"] = {
             Angle = Angle(22, -25, 0)
         },
-        ['ValveBiped.Bip01_L_ForeArm'] = {
+        ["ValveBiped.Bip01_L_ForeArm"] = {
             Angle = Angle(-22, -25, 0)
         },
         ["ValveBiped.Bip01_Head1"] = {
             Angle = Angle(0.00, -15, 0.00)
         },
-        ['ValveBiped.Bip01_L_Hand'] = {
+        ["ValveBiped.Bip01_L_Hand"] = {
             Angle = Angle(-30, 0, 90)
         },
         ["ValveBiped.Bip01_R_Hand"] = {
@@ -333,38 +333,38 @@ configurationsAnimation = {
         }
     },
     sleeping = {
-        ['ValveBiped.Bip01_Pelvis'] = {
+        ["ValveBiped.Bip01_Pelvis"] = {
             Position = Vector(0, 1.2, -31),
             Angle = Angle(0, 90, 90)
         },
-        ['ValveBiped.Bip01_R_Calf'] = {
+        ["ValveBiped.Bip01_R_Calf"] = {
             Angle = Angle(11.9, 28.9, 0)
         },
-        ['ValveBiped.Bip01_L_Calf'] = {
+        ["ValveBiped.Bip01_L_Calf"] = {
             Angle = Angle(8.5, 1.7, 0)
         },
-        ['ValveBiped.Bip01_R_Foot'] = {
+        ["ValveBiped.Bip01_R_Foot"] = {
             Angle = Angle(1.7, 15.3, -22.0)
         },
-        ['ValveBiped.Bip01_L_Foot'] = {
+        ["ValveBiped.Bip01_L_Foot"] = {
             Angle = Angle(0, 30, 0)
         },
-        ['ValveBiped.Bip01_R_UpperArm'] = {
+        ["ValveBiped.Bip01_R_UpperArm"] = {
             Angle = Angle(11.88, -80, 0)
         },
-        ['ValveBiped.Bip01_L_UpperArm'] = {
+        ["ValveBiped.Bip01_L_UpperArm"] = {
             Angle = Angle(5, -83, 0)
         },
-        ['ValveBiped.Bip01_R_ForeArm'] = {
+        ["ValveBiped.Bip01_R_ForeArm"] = {
             Angle = Angle(5, -114, 0)
         },
-        ['ValveBiped.Bip01_L_ForeArm'] = {
+        ["ValveBiped.Bip01_L_ForeArm"] = {
             Angle = Angle(29, -97, 11.88)
         },
         ["ValveBiped.Bip01_Head1"] = {
             Angle = Angle(-11.88, -11.88, -8.5)
         },
-        ['ValveBiped.Bip01_L_Hand'] = {
+        ["ValveBiped.Bip01_L_Hand"] = {
             Angle = Angle(-5, 42, 46)
         },
         ["ValveBiped.Bip01_R_Hand"] = {
@@ -375,19 +375,19 @@ configurationsAnimation = {
         }
     },
     thinking = {
-        ['ValveBiped.Bip01_R_UpperArm'] = {
+        ["ValveBiped.Bip01_R_UpperArm"] = {
             Angle = Angle(25.47, -52.63, -6.09)
         },
-        ['ValveBiped.Bip01_L_UpperArm'] = {
+        ["ValveBiped.Bip01_L_UpperArm"] = {
             Angle = Angle(-28.91, -59.38, 1.00)
         },
-        ['ValveBiped.Bip01_R_ForeArm'] = {
+        ["ValveBiped.Bip01_R_ForeArm"] = {
             Angle = Angle(-8.5, -110, 15.91)
         },
-        ['ValveBiped.Bip01_L_ForeArm'] = {
+        ["ValveBiped.Bip01_L_ForeArm"] = {
             Angle = Angle(51.00, -110, 18.84)
         },
-        ['ValveBiped.Bip01_L_Hand'] = {
+        ["ValveBiped.Bip01_L_Hand"] = {
             Angle = Angle(0, 0, 0)
         },
         ["ValveBiped.Bip01_R_Hand"] = {

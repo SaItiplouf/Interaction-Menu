@@ -80,8 +80,8 @@ anim_config = {
         action = "checkhand",
         icone = "",
         nom = "Serrer la main",
-        IsWalkable = false,
-        cameraLocked = true
+        IsWalkable = true,
+        cameraLocked = false
     },
     {
         action = "OnTheGround",
@@ -110,7 +110,6 @@ anim_config = {
         nom = "Dormir",
         IsWalkable = false,
         cameraLocked = true,
-        sleepingAnimation = true
     },
     {
         action = "waitingarm",
