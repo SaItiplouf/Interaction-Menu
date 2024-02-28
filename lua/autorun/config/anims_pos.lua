@@ -163,7 +163,6 @@ configurationsAnimation = {
         ["ValveBiped.Bip01_Head1"] = {
             Angle = Angle(0, -20, 0)
         }
-
     },
     typingcomputer = {
         ["ValveBiped.Bip01_Head1"] = {
@@ -376,7 +375,6 @@ configurationsAnimation = {
         }
     },
     thinking = {
-
         ['ValveBiped.Bip01_R_UpperArm'] = {
             Angle = Angle(25.47, -52.63, -6.09)
         },
@@ -559,5 +557,4 @@ configurationsAnimation = {
             Angle = Angle(0, -60, 0)
         }
     }
-
 }
