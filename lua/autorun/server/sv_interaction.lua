@@ -7,10 +7,23 @@ util.AddNetworkString("ToggleThirdPerson")
 util.AddNetworkString("ToggleFirstPerson")
 util.AddNetworkString("LockCameraOfThePlayer")
 util.AddNetworkString("ResetCamOnSameAnim")
+util.AddNetworkString("UpdateWeaponChange")
 AddCSLuaFile("autorun/config/anims_hud.lua")
 AddCSLuaFile("autorun/config/anims_pos.lua")
 AddCSLuaFile("autorun/config/config.lua")
 local ancienneArme = ""
+hook.Add("PlayerSwitchWeapon", "DetecterChangementArme", function(ply, oldWeapon, newWeapon)
+    local animName = ply:GetNW2String("AnimName")
+    if ply:IsValid() and animName ~= nil and animName ~= "Empty" then
+        if newWeapon:GetClass() == Config.SwepHand then
+            return
+        else
+            return true
+        end
+    end
+end)
+
+hook.Add("PlayerDeath", "ResetPlayerAnimationName", function(victim, inflictor, attacker) victim:SetNW2String("AnimName", "Empty") end)
 -- Fonction pour réinitialiser les os
 local function ReinitialiserOs(ply, restaurerArme, disableCam)
     if not disableCam then
@@ -18,19 +31,21 @@ local function ReinitialiserOs(ply, restaurerArme, disableCam)
         net.Send(ply)
     end
 
+    ply:SetNW2String("AnimName", "Empty") -- Réinitialiser le type d'animation à une chaîne vide
     if restaurerArme and Config.getLastWeapon == true then
-        print("set ancienne arme" .. ancienneArme)
+        print("set ancienne arme " .. ancienneArme)
         ply:SelectWeapon(ancienneArme) -- Sauvegarder l'arme actuelle
     end
-
-    ply:SetNW2String("AnimName", "Empty") -- Réinitialiser le type d'animation à une chaîne vide
 end
 
 net.Receive("DemanderAnimation", function(len, ply)
     local typeAnimation = net.ReadString()
+    local ActiveWeapon = ply:GetActiveWeapon()
+    ancienneArme = ActiveWeapon:GetClass()
     if typeAnimation == ply:GetNW2String("AnimName") then
         ply:SetNW2String("AnimName", "Empty")
     else
+        hook.Add("SetupMove", "MySpeed", function(ply, mv) mv:SetMaxClientSpeed(1) end)
         ply:SetNW2String("AnimName", typeAnimation)
         if ply:GetNW2String("AnimName") == typeAnimation then
             print("Successfully Set NW2 Value")
@@ -40,7 +55,6 @@ net.Receive("DemanderAnimation", function(len, ply)
     end
 
     if IsValid(ply) and ply:IsPlayer() then
-        ancienneArme = ply:GetActiveWeapon():GetClass()
         if not ply:HasWeapon(Config.SwepHand) then ply:Give(Config.SwepHand) end
         ply:SelectWeapon(Config.SwepHand)
         net.Start("ToggleThirdPerson")

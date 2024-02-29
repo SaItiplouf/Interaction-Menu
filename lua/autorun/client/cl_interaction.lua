@@ -4,7 +4,7 @@ include("autorun/config/anims_pos.lua")
 include("autorun/config/config.lua")
 local previewAnim = ""
 local function ResetBonesEtRetirerLeHook()
-    hook.Remove("Think", "SurveillerMouvementEtArmePourAnimation")
+    hook.Remove("Think", "SurveillerMouvement")
     net.Start("ReinitialiserOsDemande")
     net.SendToServer()
 end
@@ -216,7 +216,6 @@ local function OuvrirMenuPanel()
                 end
 
                 print("Carré cliqué! Action : " .. config.action)
-                local armePrecedente = IsValid(LocalPlayer():GetActiveWeapon()) and LocalPlayer():GetActiveWeapon():GetClass() or ""
                 net.Start("DemanderAnimation")
                 net.WriteString(config.action)
                 local lockedYaw = nil
@@ -250,10 +249,8 @@ local function OuvrirMenuPanel()
                     end
                 end)
 
-                hook.Add("Think", "SurveillerMouvementEtArmePourAnimation", function()
+                hook.Add("Think", "SurveillerMouvement", function()
                     local joueur = LocalPlayer()
-                    -- Vérifier si le joueur a bougé rapidement, changé d'arme ou s'est accroupi
-                    local armeActuelle = IsValid(joueur:GetActiveWeapon()) and joueur:GetActiveWeapon():GetClass() or ""
                     local estAccroupi = joueur:Crouching()
                     local nAppuiePasSurUse = joueur:KeyDown(IN_USE)
                     if config.IsWalkable == true and Config.isWalkableAllowedForAllAnims == true then
@@ -262,7 +259,7 @@ local function OuvrirMenuPanel()
                         MaxVelForAction = Config.MaxDefaultActionVel
                     end
 
-                    if joueur:GetVelocity():Length() > MaxVelForAction or (armePrecedente ~= armeActuelle and armeActuelle ~= Config.SwepHand) or estAccroupi or nAppuiePasSurUse then
+                    if joueur:GetVelocity():Length() > MaxVelForAction or estAccroupi or nAppuiePasSurUse then
                         hook.Remove("InputMouseApply", "LockToYawOnly")
                         ResetBonesEtRetirerLeHook()
                         hook.Add("GetCmdAndResetViewAngle", "RetirerLeHookApresExec", myHook)

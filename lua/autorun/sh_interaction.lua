@@ -1,16 +1,6 @@
-print("Le fichier shared est exécuté. Côté :", SERVER and "Serveur" or "Client")
 if SERVER then
     util.AddNetworkString("WaitingSharedAnimManipulation")
     util.AddNetworkString("SimpleResetBones")
-    net.Receive("SimpleResetBones", function(len, ply)
-        local steamID = net.ReadString()
-        local playerEnt = FindPlayerBySteamID(steamID)
-        if IsValid(playerEnt) then
-            ResetPlayerBones(playerEnt)
-        else
-            print("Aucun joueur trouvé pour le SteamID :", steamID)
-        end
-    end)
 end
 
 function GetBonesAnglesPositionsAndResetThem(ent)
@@ -22,6 +12,7 @@ function GetBonesAnglesPositionsAndResetThem(ent)
     end
 end
 
+if SERVER then local blockVehicleEnter = false end
 function ManipulateBoneOnShared(ply, AnimName)
     if CLIENT then
         if ply:IsPlayer() and ply:Alive() then
@@ -34,6 +25,11 @@ function ManipulateBoneOnShared(ply, AnimName)
             print("error client")
         end
     elseif SERVER then
+        blockVehicleEnter = true
+        timer.Simple(2, function()
+            blockVehicleEnter = false -- Réinitialise le blocage après la période de temps donnée
+        end)
+
         local animationData = configurationsAnimation[AnimName]
         if not animationData then
             print("L'animation", AnimName, "n'existe pas dans configurationsAnimation.")
@@ -55,7 +51,10 @@ function ManipulateBoneOnShared(ply, AnimName)
                     local lerpedAngle = LerpAngle(progress, angleInitial, angleFinal)
                     ply:ManipulateBoneAngles(idOs, lerpedAngle)
                     if position then ply:ManipulateBonePosition(idOs, position) end
-                    if progress >= 1 then timer.Remove("Animation_" .. nomOs) end
+                    if progress >= 1 then
+                        timer.Remove("Animation_" .. nomOs)
+                        hook.Remove("SetupMove", "MySpeed")
+                    end
                 end)
             end
         end
@@ -74,6 +73,19 @@ if SERVER then
             print("Nom de l'animation :", AnimName)
         end
     end)
+
+    net.Receive("SimpleResetBones", function(len, ply)
+        local steamID = net.ReadString()
+        local playerEnt = FindPlayerBySteamID(steamID)
+        if IsValid(playerEnt) then
+            ResetPlayerBones(playerEnt)
+        else
+            print("Aucun joueur trouvé pour le SteamID :", steamID)
+        end
+    end)
+
+    hook.Add("CanPlayerEnterVehicle", "BlockVehicleEnter", function(ply, vehicle) if blockVehicleEnter then return false end end)
+    hook.Add("PlayerEnteredVehicle", "MonHookPlayerEnteredVehicle", function(ply, vehicle, role) ply:SetNW2String("AnimName", "Empty") end)
 end
 
 function FindPlayerBySteamID(steamID)
