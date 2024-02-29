@@ -2,6 +2,7 @@ include("autorun/sh_interaction.lua")
 include("autorun/config/anims_hud.lua")
 include("autorun/config/anims_pos.lua")
 include("autorun/config/config.lua")
+local chatOpen = false
 local previewAnim = ""
 local function ResetBonesEtRetirerLeHook()
     hook.Remove("Think", "SurveillerMouvement")
@@ -235,6 +236,8 @@ local function OuvrirMenuPanel()
                         local currentAngle = ccmd:GetViewAngles()
                         local sensitivity = Config.LockedCamSensitivity -- Ajustez la sensibilité selon vos préférences
                         local horizontalOffset = Config.AngleMaxWhenLocked -- Offset autorisé horizontalement par rapport à l'angle verrouillé
+                        -- Inverser la direction de la rotation horizontale
+                        x = x * -1
                         -- Calculer le nouvel angle de vue en fonction du mouvement horizontal de la souris
                         local newYaw = currentAngle.yaw + x * sensitivity
                         -- Gérer les cas où l'angle dépasse une rotation complète (360 degrés)
@@ -249,21 +252,21 @@ local function OuvrirMenuPanel()
                     end
                 end)
 
-                hook.Add("Think", "SurveillerMouvement", function()
-                    local joueur = LocalPlayer()
-                    local estAccroupi = joueur:Crouching()
-                    local nAppuiePasSurUse = joueur:KeyDown(IN_USE)
-                    if config.IsWalkable == true and Config.isWalkableAllowedForAllAnims == true then
-                        MaxVelForAction = Config.ActionWalkableVel
-                    else
-                        MaxVelForAction = Config.MaxDefaultActionVel
-                    end
-
-                    if joueur:GetVelocity():Length() > MaxVelForAction or estAccroupi or nAppuiePasSurUse then
-                        hook.Remove("InputMouseApply", "LockToYawOnly")
-                        ResetBonesEtRetirerLeHook()
-                        hook.Add("GetCmdAndResetViewAngle", "RetirerLeHookApresExec", myHook)
-                    end
+                -- hook.Add("Think", "SurveillerMouvement", function()
+                --     local joueur = LocalPlayer()
+                --     local estAccroupi = joueur:Crouching()
+                --     local nAppuiePasSurUse = joueur:KeyDown(IN_USE)
+                --     local nAppuiePasSurReload = joueur:KeyDown(IN_RELOAD)
+                --     if config.IsWalkable == true and Config.isWalkableAllowedForAllAnims == true then
+                --         MaxVelForAction = Config.ActionWalkableVel
+                --     else
+                --         MaxVelForAction = Config.MaxDefaultActionVel
+                --     end
+                -- end)
+                net.Receive("VerifServeurSurveillance", function()
+                    hook.Remove("InputMouseApply", "LockToYawOnly")
+                    ResetBonesEtRetirerLeHook()
+                    hook.Add("GetCmdAndResetViewAngle", "RetirerLeHookApresExec", myHook)
                 end)
 
                 parentPanel:Remove()
@@ -276,9 +279,11 @@ local function OuvrirMenuPanel()
     end
 end
 
+hook.Add("StartChat", "HasStartedTyping", function(isTeamChat) chatOpen = true end)
+hook.Add("FinishChat", "HasStoppedTyping", function() chatOpen = false end)
 local function VerifierTouchePressee()
     local ply = LocalPlayer()
-    if input.IsKeyDown(KEY_G) and not ply:InVehicle() then
+    if input.IsKeyDown(KEY_G) and not ply:InVehicle() and ply:Alive() and chatOpen == false then
         OuvrirMenuPanel() -- Ouvrir le menu
     end
 end
