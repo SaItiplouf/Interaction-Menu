@@ -46,6 +46,12 @@ local function SurveillancePlayer(ply)
         local AppuiePasSurUse = ply:KeyDown(IN_USE)
         local AppuiePasSurReload = ply:KeyDown(IN_RELOAD)
         local velocityLength = ply:GetVelocity():Length()
+        -- reintegrer les velocité max
+        -- if config.IsWalkable == true and Config.isWalkableAllowedForAllAnims == true then
+        --     MaxVelForAction = Config.ActionWalkableVel
+        -- else
+        --     MaxVelForAction = Config.MaxDefaultActionVel
+        -- end
         if velocityLength > 5 or estAccroupi or AppuiePasSurUse or AppuiePasSurReload then
             net.Start("VerifServeurSurveillance")
             net.Send(ply)
