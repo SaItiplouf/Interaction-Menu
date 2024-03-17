@@ -26,7 +26,6 @@ hook.Add("PlayerSwitchWeapon", "DetecterChangementArme", function(ply, oldWeapon
     end
 end)
 
-<<<<<<< HEAD
 hook.Add("PlayerInitialSpawn", "SetEmptyAnimName", function(ply)
     ply:SetNW2String("AnimName", "Empty")
 end)
@@ -37,17 +36,6 @@ end)
 
 local surveillanceStates = {}
 local function SurveillancePlayer(ply, isWalkable)
-=======
-hook.Add("PlayerInitialSpawn", "SetEmptyAnimName", function(ply) ply:SetNW2String("AnimName", "Empty") end)
-hook.Add("PlayerDeath", "ResetPlayerAnimationName", function(victim, inflictor, attacker)
-    victim:SetNW2String("AnimName", "Empty")
-    print(victim:GetNW2String("AnimName"))
-end)
-
-local surveillanceStates = {}
-local function SurveillancePlayer(ply)
-    print("un tour")
->>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
     -- Vérifie si la surveillance est active pour ce joueur
     if surveillanceStates[ply] == true or not ply:Alive() then
         hook.Remove("Tick", "SurveillancePlayer_" .. ply:EntIndex()) -- Retire le hook spécifique à ce joueur
@@ -60,7 +48,6 @@ local function SurveillancePlayer(ply)
         local AppuiePasSurUse = ply:KeyDown(IN_USE)
         local AppuiePasSurReload = ply:KeyDown(IN_RELOAD)
         local velocityLength = ply:GetVelocity():Length()
-<<<<<<< HEAD
 
         -- reintegrer les velocité max
         if isWalkable == true and Config.isWalkableAllowedForAllAnims == true then
@@ -71,15 +58,6 @@ local function SurveillancePlayer(ply)
 
         if velocityLength > MaxVelForAction or estAccroupi or AppuiePasSurUse or AppuiePasSurReload then
             print(MaxVelForAction, "malvellll")
-=======
-        -- reintegrer les velocité max
-        -- if config.IsWalkable == true and Config.isWalkableAllowedForAllAnims == true then
-        --     MaxVelForAction = Config.ActionWalkableVel
-        -- else
-        --     MaxVelForAction = Config.MaxDefaultActionVel
-        -- end
-        if velocityLength > 5 or estAccroupi or AppuiePasSurUse or AppuiePasSurReload then
->>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
             net.Start("VerifServeurSurveillance")
             net.Send(ply)
             surveillanceStates[ply] = true -- Marque le joueur comme surveillé
@@ -87,7 +65,6 @@ local function SurveillancePlayer(ply)
     end
 end
 
-<<<<<<< HEAD
 local function DeclencherLeHookDeSurveillance(ply, typeAnimation)
     -- Vérifie si le joueur est valide
     if IsValid(ply) then
@@ -114,14 +91,6 @@ local function DeclencherLeHookDeSurveillance(ply, typeAnimation)
                 SurveillancePlayer(ply, isWalkable)
             end)
 
-=======
-local function DeclencherLeHookDeSurveillance(ply)
-    -- Vérifie si le joueur est valide
-    if IsValid(ply) then
-        -- Vérifie si le joueur est déjà surveillé, s'il ne l'est pas, ajoute la surveillance
-        if not surveillanceStates[ply] then
-            hook.Add("Tick", "SurveillancePlayer_" .. ply:EntIndex(), function() SurveillancePlayer(ply) end)
->>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
             surveillanceStates[ply] = false -- Initialise l'état de surveillance pour ce joueur
         end
     end
@@ -146,12 +115,7 @@ net.Receive("DemanderAnimation", function(len, ply)
     local ActiveWeapon = ply:GetActiveWeapon()
     if IsValid(ActiveWeapon) and ActiveWeapon.FistsOut == true then
         ActiveWeapon:FistsDown()
-<<<<<<< HEAD
         ActiveWeapon:Reload()
-=======
-        ActiveWeapon:Reload() -- Cela appelle la fonction de rechargement pour fermer les poings
-        print("ZDKADIZADUAZUJDAZJDJZADHUAZHDZAODZIKOADUIZADHUZAIDZAIDHUZADUZAIDZAUIDUYAZDUAZU")
->>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
     end
 
     if IsValid(ActiveWeapon) then
@@ -161,39 +125,23 @@ net.Receive("DemanderAnimation", function(len, ply)
     end
 
     surveillanceStates[ply] = false -- Réinitialise l'état de surveillance pour ce joueur
-<<<<<<< HEAD
     DeclencherLeHookDeSurveillance(ply, typeAnimation)
     if typeAnimation == ply:GetNW2String("AnimName") then
         ply:SetNW2String("AnimName", "Empty")
     else
-=======
-    DeclencherLeHookDeSurveillance(ply)
-    if typeAnimation == ply:GetNW2String("AnimName") then
-        ply:SetNW2String("AnimName", "Empty")
-    else
-        hook.Add("SetupMove", "MySpeed", function(ply, mv) mv:SetMaxClientSpeed(1) end)
->>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
         ply:SetNW2String("AnimName", typeAnimation)
         if ply:GetNW2String("AnimName") == typeAnimation then
             print("Successfully Set NW2 Value")
         else
-<<<<<<< HEAD
             print("Couldn't Set NW2 Value : Previous netstring may be null, here is the actual value: " ..
                       ply:GetNW2String("AnimName"))
-=======
-            print("Couldn't Set NW2 Value : Previous netstring may be null, here is the actual value: " .. ply:GetNW2String("AnimName"))
->>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
         end
     end
 
     if IsValid(ply) and ply:IsPlayer() then
-<<<<<<< HEAD
         if not ply:HasWeapon(Config.SwepHand) then
             ply:Give(Config.SwepHand)
         end
-=======
-        if not ply:HasWeapon(Config.SwepHand) then ply:Give(Config.SwepHand) end
->>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
         ply:SelectWeapon(Config.SwepHand)
         net.Start("ToggleThirdPerson")
         net.Send(ply)
@@ -213,8 +161,4 @@ net.Receive("ResetCamOnSameAnim", function(len, ply)
         net.Send(ply)
         print("Surveillance détecté reçue du joueur cam" .. ply:Nick())
     end
-<<<<<<< HEAD
 end)
-=======
-end)
->>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
