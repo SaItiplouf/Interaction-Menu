@@ -11,9 +11,13 @@ local function ResetBonesEtRetirerLeHook()
 end
 
 local function sleepingAnim(ent)
+<<<<<<< HEAD
     if not IsValid(ent) or not ent:Alive() then
         return
     end
+=======
+    if not IsValid(ent) or not ent:Alive() then return end
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
     -- Obtenez la position du bone "ValveBiped.Bip01_Head1" de l'entité
     local boneIndex = ent:LookupBone("ValveBiped.Bip01_Head1")
     if not boneIndex then -- Vérifiez si le bone existe
@@ -54,8 +58,7 @@ end
 local function CreerFrameMenuAnim(parentPanel)
     local frame = vgui.Create("DFrame", parentPanel)
     frame:SetSize(600, 390)
-    frame:SetPos((ScrW() / 2 - parentPanel:GetWide() / 2) + (parentPanel:GetWide() - frame:GetWide()),
-        ScrH() / 2 - parentPanel:GetTall() / 2)
+    frame:SetPos((ScrW() / 2 - parentPanel:GetWide() / 2) + (parentPanel:GetWide() - frame:GetWide()), ScrH() / 2 - parentPanel:GetTall() / 2)
     frame:SetTitle("")
     frame:ShowCloseButton(false)
     frame:SetDraggable(false)
@@ -70,8 +73,12 @@ local function CreerFrameMenuAnim(parentPanel)
         end
 
         -- Dessiner le texte au centre
+<<<<<<< HEAD
         draw.SimpleText(Config.Title, Config.TitreFont, w / 2, 20, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER,
             TEXT_ALIGN_CENTER)
+=======
+        draw.SimpleText(Config.Title, Config.TitreFont, w / 2, 20, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
     end
     return frame
 end
@@ -136,10 +143,14 @@ local function CreerButtonClose(parentPanel, frame)
     closeButton:SetColor(Color(255, 255, 255))
     closeButton:SetSize(30, 30)
     closeButton:SetPos(frame:GetWide() - 30, 0)
+<<<<<<< HEAD
     closeButton.Paint = function(self, w, h)
         draw.RoundedBoxEx(6, 0, 0, w, h, self:IsHovered() and Config.bgHoverCloseButton or Config.bgCloseButton, false,
             false, true, false)
     end
+=======
+    closeButton.Paint = function(self, w, h) draw.RoundedBoxEx(6, 0, 0, w, h, self:IsHovered() and Config.bgHoverCloseButton or Config.bgCloseButton, false, false, true, false) end
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
     closeButton.DoClick = function()
         if IsValid(parentPanel) then
             parentPanel:Remove()
@@ -154,12 +165,8 @@ local function ImportScrollPanel(frame)
     scrollPanel:SetSize(frame:GetWide() - 30, frame:GetTall() - 80)
     local scrollBar = scrollPanel:GetVBar()
     scrollBar:SetHideButtons(true)
-    scrollBar.Paint = function(self, w, h)
-        draw.RoundedBox(4, 0, 0, w, h, Color(100, 100, 100))
-    end
-    scrollBar.btnGrip.Paint = function(self, w, h)
-        draw.RoundedBox(4, 0, 0, w, h, Color(200, 200, 200))
-    end
+    scrollBar.Paint = function(self, w, h) draw.RoundedBox(4, 0, 0, w, h, Color(100, 100, 100)) end
+    scrollBar.btnGrip.Paint = function(self, w, h) draw.RoundedBox(4, 0, 0, w, h, Color(200, 200, 200)) end
     return scrollPanel
 end
 
@@ -208,16 +215,14 @@ local function OuvrirMenuPanel()
             carre:SetSize(105, 105)
             carre.Paint = function(self, w, h)
                 draw.RoundedBox(6, 0, 0, w, h, self:IsHovered() and Config.bgHoverButton or Config.bgButton)
-                draw.SimpleText(config.nom, Config.FontButton, w / 2, h / 2, Config.ColorTextButton, TEXT_ALIGN_CENTER,
-                    TEXT_ALIGN_CENTER)
+                draw.SimpleText(config.nom, Config.FontButton, w / 2, h / 2, Config.ColorTextButton, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
             end
+<<<<<<< HEAD
+=======
 
-            carre.OnCursorEntered = function()
-                previewAnim = config.action
-            end
-            carre.OnCursorExited = function()
-                previewAnim = ""
-            end
+            carre.OnCursorEntered = function() previewAnim = config.action end
+            carre.OnCursorExited = function() previewAnim = "" end
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
             if Config.ActivateIcon == true and config.icone and config.icone ~= "" then
                 local iconImage = vgui.Create("DImage", carre)
                 iconImage:SetSize(100, 100)
@@ -228,14 +233,21 @@ local function OuvrirMenuPanel()
             end
 
             carre.OnMousePressed = function()
+<<<<<<< HEAD
                 if LocalPlayer():GetVelocity():LengthSqr() > 1 or ply:InVehicle() or ply:Crouching() then
+=======
+                if LocalPlayer():GetVelocity():LengthSqr() > 1 or ply:InVehicle() then
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
                     return -- Retourner si la vélocité du joueur est supérieure à 0
                 end
 
                 print("Carré cliqué! Action : " .. config.action)
                 net.Start("DemanderAnimation")
                 net.WriteString(config.action)
+<<<<<<< HEAD
 
+=======
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
                 local lockedYaw = nil
                 if Config.LockCameraForAllAnimations == true or config.cameraLocked == true then
                     ply = LocalPlayer()
@@ -244,6 +256,7 @@ local function OuvrirMenuPanel()
                     lockedYaw = eyeAngles.yaw
                     yawOffset = Config.AngleMaxWhenLocked
                 end
+<<<<<<< HEAD
 
                 net.SendToServer()
                 print("Message envoyé au serveur.")
@@ -259,7 +272,11 @@ local function OuvrirMenuPanel()
                         cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_RELOAD)))
                     end
                 end)
+=======
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
 
+                net.SendToServer()
+                print("Message envoyé au serveur.")
                 hook.Add("InputMouseApply", "LockToYawOnly", function(ccmd, x, y, angle)
                     if lockedYaw ~= nil then
                         -- Si l'angle est verrouillé, autoriser le mouvement horizontal avec une petite marge
@@ -271,8 +288,12 @@ local function OuvrirMenuPanel()
                         -- Calculer le nouvel angle de vue en fonction du mouvement horizontal de la souris
                         local newYaw = currentAngle.yaw + x * sensitivity
                         -- Gérer les cas où l'angle dépasse une rotation complète (360 degrés)
+<<<<<<< HEAD
                         lockedYaw = (newYaw - lockedYaw > 180) and (lockedYaw + 360) or
                                         ((newYaw - lockedYaw < -180) and (lockedYaw - 360) or lockedYaw)
+=======
+                        lockedYaw = (newYaw - lockedYaw > 180) and (lockedYaw + 360) or ((newYaw - lockedYaw < -180) and (lockedYaw - 360) or lockedYaw)
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
                         -- Limiter les angles de vue dans la plage autorisée autour de l'angle verrouillé
                         local minAngle = lockedYaw - horizontalOffset
                         local maxAngle = lockedYaw + horizontalOffset
@@ -283,9 +304,25 @@ local function OuvrirMenuPanel()
                     end
                 end)
 
+<<<<<<< HEAD
                 net.Receive("VerifServeurSurveillance", function()
                     hook.Remove("InputMouseApply", "LockToYawOnly")
                     hook.Remove("CreateMove", "BlockReload")
+=======
+                -- hook.Add("Think", "SurveillerMouvement", function()
+                --     local joueur = LocalPlayer()
+                --     local estAccroupi = joueur:Crouching()
+                --     local nAppuiePasSurUse = joueur:KeyDown(IN_USE)
+                --     local nAppuiePasSurReload = joueur:KeyDown(IN_RELOAD)
+                --     if config.IsWalkable == true and Config.isWalkableAllowedForAllAnims == true then
+                --         MaxVelForAction = Config.ActionWalkableVel
+                --     else
+                --         MaxVelForAction = Config.MaxDefaultActionVel
+                --     end
+                -- end)
+                net.Receive("VerifServeurSurveillance", function()
+                    hook.Remove("InputMouseApply", "LockToYawOnly")
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
                     ResetBonesEtRetirerLeHook()
                     hook.Add("GetCmdAndResetViewAngle", "RetirerLeHookApresExec", myHook)
                 end)
@@ -300,12 +337,17 @@ local function OuvrirMenuPanel()
     end
 end
 
+<<<<<<< HEAD
 hook.Add("StartChat", "HasStartedTyping", function(isTeamChat)
     chatOpen = true
 end)
 hook.Add("FinishChat", "HasStoppedTyping", function()
     chatOpen = false
 end)
+=======
+hook.Add("StartChat", "HasStartedTyping", function(isTeamChat) chatOpen = true end)
+hook.Add("FinishChat", "HasStoppedTyping", function() chatOpen = false end)
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
 local function VerifierTouchePressee()
     local ply = LocalPlayer()
     if input.IsKeyDown(KEY_G) and not ply:InVehicle() and ply:Alive() and chatOpen == false then
@@ -313,6 +355,7 @@ local function VerifierTouchePressee()
     end
 end
 
+<<<<<<< HEAD
 net.Receive("ToggleThirdPerson", function()
     RunConsoleCommand("thirdperson")
 end)
@@ -323,11 +366,21 @@ hook.Add("Think", "VerifierTouchePressee", VerifierTouchePressee)
 local function OnPlayerNetworkedVarChanged(ent, name, oldVal, newVal)
     print("Le joueur " .. ent:Nick() .. " a changé la valeur de la netvar '" .. name .. "' de '" .. tostring(oldVal) ..
               "' à '" .. tostring(newVal) .. "'.")
+=======
+net.Receive("ToggleThirdPerson", function() RunConsoleCommand("thirdperson") end)
+net.Receive("ToggleFirstPerson", function() RunConsoleCommand("firstperson") end)
+hook.Add("Think", "VerifierTouchePressee", VerifierTouchePressee)
+local function OnPlayerNetworkedVarChanged(ent, name, oldVal, newVal)
+    print("Le joueur " .. ent:Nick() .. " a changé la valeur de la netvar '" .. name .. "' de '" .. tostring(oldVal) .. "' à '" .. tostring(newVal) .. "'.")
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
     if name == "AnimName" and ent:IsPlayer() and ent:Alive() then
         if newVal == "Empty" then
             GetBonesAnglesPositionsAndResetThem(ent)
             if ent == LocalPlayer() then
+<<<<<<< HEAD
                 hook.Remove("InputMouseApply", "LockToYawOnly")
+=======
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
                 net.Start("ResetCamOnSameAnim")
                 net.SendToServer()
             else
@@ -346,9 +399,13 @@ local function OnPlayerNetworkedVarChanged(ent, name, oldVal, newVal)
 
                 if newVal == "sleeping" and ent:Alive() then
                     local timerName = "SleepingParticleEmitterTimer_" .. ent:EntIndex() -- Nom unique du timer pour cette entité
+<<<<<<< HEAD
                     timer.Create(timerName, 1, 0, function()
                         sleepingAnim(ent)
                     end)
+=======
+                    timer.Create(timerName, 1, 0, function() sleepingAnim(ent) end)
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
                 else
                     local timerName = "SleepingParticleEmitterTimer_" .. ent:EntIndex() -- Nom unique du timer pour cette entité
                     timer.Remove(timerName)
@@ -364,4 +421,8 @@ local function OnPlayerNetworkedVarChanged(ent, name, oldVal, newVal)
 end
 
 -- Ajoutez le hook pour surveiller les changements de netvars du joueur local
+<<<<<<< HEAD
 hook.Add("EntityNetworkedVarChanged", "MonitorPlayerNetworkedVarChanges", OnPlayerNetworkedVarChanged)
+=======
+hook.Add("EntityNetworkedVarChanged", "MonitorPlayerNetworkedVarChanges", OnPlayerNetworkedVarChanged)
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd

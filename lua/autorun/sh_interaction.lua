@@ -12,9 +12,13 @@ function GetBonesAnglesPositionsAndResetThem(ent)
     end
 end
 
+<<<<<<< HEAD
 if SERVER then
     local blockVehicleEnter = false
 end
+=======
+if SERVER then local blockVehicleEnter = false end
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
 function ManipulateBoneOnShared(ply, AnimName)
     if CLIENT then
         if ply:IsPlayer() and ply:Alive() then
@@ -28,7 +32,11 @@ function ManipulateBoneOnShared(ply, AnimName)
         end
     elseif SERVER then
         blockVehicleEnter = true
+<<<<<<< HEAD
         timer.Simple(3, function()
+=======
+        timer.Simple(2, function()
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
             blockVehicleEnter = false -- Réinitialise le blocage après la période de temps donnée
         end)
 
@@ -52,12 +60,19 @@ function ManipulateBoneOnShared(ply, AnimName)
                     local progress = math.min(1, elapsedTime / duration)
                     local lerpedAngle = LerpAngle(progress, angleInitial, angleFinal)
                     ply:ManipulateBoneAngles(idOs, lerpedAngle)
+<<<<<<< HEAD
                     if position then
                         ply:ManipulateBonePosition(idOs, position)
                     end
                     if progress >= 1 then
                         timer.Remove("Animation_" .. nomOs)
                         hook.Remove("SetupMove", "MySpeed_" .. ply:EntIndex())
+=======
+                    if position then ply:ManipulateBonePosition(idOs, position) end
+                    if progress >= 1 then
+                        timer.Remove("Animation_" .. nomOs)
+                        hook.Remove("SetupMove", "MySpeed")
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
                     end
                 end)
             end
@@ -88,6 +103,7 @@ if SERVER then
         end
     end)
 
+<<<<<<< HEAD
     hook.Add("CanPlayerEnterVehicle", "BlockVehicleEnter", function(ply, vehicle)
         if blockVehicleEnter then
             return false
@@ -96,13 +112,21 @@ if SERVER then
     hook.Add("PlayerEnteredVehicle", "MonHookPlayerEnteredVehicle", function(ply, vehicle, role)
         ply:SetNW2String("AnimName", "Empty")
     end)
+=======
+    hook.Add("CanPlayerEnterVehicle", "BlockVehicleEnter", function(ply, vehicle) if blockVehicleEnter then return false end end)
+    hook.Add("PlayerEnteredVehicle", "MonHookPlayerEnteredVehicle", function(ply, vehicle, role) ply:SetNW2String("AnimName", "Empty") end)
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
 end
 
 function FindPlayerBySteamID(steamID)
     for _, player in ipairs(player.GetAll()) do
+<<<<<<< HEAD
         if player:SteamID64() == steamID then
             return player
         end
+=======
+        if player:SteamID64() == steamID then return player end
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
     end
     return nil
 end
@@ -114,4 +138,8 @@ function ResetPlayerBones(playerEnt)
         playerEnt:ManipulateBoneAngles(i, Angle(0, 0, 0))
         playerEnt:ManipulateBonePosition(i, Vector(0, 0, 0))
     end
+<<<<<<< HEAD
 end
+=======
+end
+>>>>>>> 45f9a86a933bf78415a07d2c70ee2ea23912a9cd
