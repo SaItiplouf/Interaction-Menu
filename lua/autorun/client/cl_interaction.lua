@@ -2,26 +2,38 @@ include("autorun/sh_interaction.lua")
 include("autorun/config/anims_hud.lua")
 include("autorun/config/anims_pos.lua")
 include("autorun/config/config.lua")
-
+local chatOpen = false
 local previewAnim = ""
-local originalViewAngle = nil
-
-local function RetirerSurveillanceApresReponse()
-    hook.Remove("Think", "SurveillerMouvementEtArmePourAnimation")
+local function ResetBonesEtRetirerLeHook()
+    hook.Remove("Think", "SurveillerMouvement")
+    net.Start("ReinitialiserOsDemande")
+    net.SendToServer()
 end
 
-local function sleepingAnim()
-    local offset = Vector(0, 10, 20) -- Ajustez cet offset selon vos besoins pour placer les particules où vous le souhaitez par rapport au modèle du joueur
-    local pos = ply:GetPos() + offset -- Position au niveau du playermodel du joueur
-    local emitter = ParticleEmitter(pos)
+local function sleepingAnim(ent)
+    if not IsValid(ent) or not ent:Alive() then
+        return
+    end
+    -- Obtenez la position du bone "ValveBiped.Bip01_Head1" de l'entité
+    local boneIndex = ent:LookupBone("ValveBiped.Bip01_Head1")
+    if not boneIndex then -- Vérifiez si le bone existe
+        return
+    end
 
+    local bonePos, boneAng = ent:GetBonePosition(boneIndex)
+    if not bonePos then -- Vérifiez si vous avez pu obtenir la position du bone
+        return
+    end
+
+    local offset = Vector(0, 0, -15)
+    -- Ajustez cet offset selon vos besoins pour placer les particules par rapport au bone
+    local pos = bonePos + boneAng:Forward() * offset.x + boneAng:Right() * offset.y + boneAng:Up() * offset.z
+    local emitter = ParticleEmitter(pos)
     if emitter then
         local currentTime = CurTime()
-        local lastParticleTime = ply.lastParticleTime or 0
-
+        local lastParticleTime = ent.lastParticleTime or 0
         if currentTime - lastParticleTime >= 2 then -- Emit a particle every 3 seconds
-            ply.lastParticleTime = currentTime
-
+            ent.lastParticleTime = currentTime
             local particle = emitter:Add("sleeping_particle.vmt", pos)
             if particle then
                 particle:SetVelocity(Vector(math.random(-10, 10), math.random(-10, 10), math.random(1, 2)))
@@ -35,11 +47,10 @@ local function sleepingAnim()
                 particle:SetCollide(true)
                 particle:SetBounce(2)
             end
-
-            emitter:Finish()
         end
     end
 end
+
 local function CreerFrameMenuAnim(parentPanel)
     local frame = vgui.Create("DFrame", parentPanel)
     frame:SetSize(600, 390)
@@ -61,10 +72,10 @@ local function CreerFrameMenuAnim(parentPanel)
         -- Dessiner le texte au centre
         draw.SimpleText(Config.Title, Config.TitreFont, w / 2, 20, Color(255, 255, 255, 255), TEXT_ALIGN_CENTER,
             TEXT_ALIGN_CENTER)
-
     end
     return frame
 end
+
 local function CreerModelEtExtensionPanel(parentPanel, frame)
     local extensionFrame = vgui.Create("DFrame", parentPanel)
     extensionFrame:SetSize(parentPanel:GetWide() - frame:GetWide(), frame:GetTall())
@@ -76,7 +87,6 @@ local function CreerModelEtExtensionPanel(parentPanel, frame)
     extensionFrame.Paint = function(self, w, h)
         -- Dessiner un rectangle avec une couleur de fond et une opacité spécifiées
         draw.RoundedBox(0, 0, 0, w, h, Color(33, 33, 33, 240)) -- Couleur de fond avec une opacité de 200
-
         -- Appliquer un effet de flou à l'arrière-plan du panneau
     end
 
@@ -88,7 +98,6 @@ local function CreerModelEtExtensionPanel(parentPanel, frame)
     modelPanel:SetFOV(50)
     function modelPanel:LayoutEntity(ent)
         local animConfig = configurationsAnimation[previewAnim]
-
         if not animConfig then
             for i = 0, ent:GetBoneCount() - 1 do
                 ent:ManipulateBoneAngles(i, Angle(0, 0, 0))
@@ -101,27 +110,25 @@ local function CreerModelEtExtensionPanel(parentPanel, frame)
             local idOs = ent:LookupBone(nomOs)
             if idOs then
                 -- Manipuler l'angle si il est spécifié
-                if type(value) == "table" then
+                if type(value) == "table" and value.Angle then
                     local angleInitial = ent:GetManipulateBoneAngles(idOs)
                     local angleFinal = value.Angle or angleInitial -- Utiliser l'angle initial si aucun angle n'est spécifié
-                    local position = value.Position -- Récupérer la position si elle est spécifiée
-
                     ent:ManipulateBoneAngles(idOs, angleFinal)
+                end
 
+                if type(value) == "table" and value.Position then
                     -- Manipuler la position si elle est spécifiée
-                    if position then
-                        ent:ManipulateBonePosition(idOs, position)
-                    end
-
+                    ent:ManipulateBonePosition(idOs, value.Position)
                 end
             end
         end
     end
+
     modelPanel:SetAmbientLight(Color(60, 60, 60, 255))
     modelPanel:SetAnimated(false)
-
     return extensionFrame, modelPanel
 end
+
 local function CreerButtonClose(parentPanel, frame)
     local closeButton = vgui.Create("DButton", frame)
     closeButton:SetText("X")
@@ -129,12 +136,10 @@ local function CreerButtonClose(parentPanel, frame)
     closeButton:SetColor(Color(255, 255, 255))
     closeButton:SetSize(30, 30)
     closeButton:SetPos(frame:GetWide() - 30, 0)
-
     closeButton.Paint = function(self, w, h)
         draw.RoundedBoxEx(6, 0, 0, w, h, self:IsHovered() and Config.bgHoverCloseButton or Config.bgCloseButton, false,
             false, true, false)
     end
-
     closeButton.DoClick = function()
         if IsValid(parentPanel) then
             parentPanel:Remove()
@@ -142,6 +147,7 @@ local function CreerButtonClose(parentPanel, frame)
         end
     end
 end
+
 local function ImportScrollPanel(frame)
     local scrollPanel = vgui.Create("DScrollPanel", frame)
     scrollPanel:SetPos(20, 60)
@@ -171,34 +177,28 @@ end
 
 local function OuvrirMenuPanel()
     if not menuOuvert then
-
         local parentPanel = vgui.Create("DPanel")
         parentPanel:SetSize(850, 390)
         parentPanel:SetPos(ScrW() / 2 - parentPanel:GetWide() / 2, ScrH() / 2 - parentPanel:GetTall() / 2)
         parentPanel.Paint = function(self, w, h)
             surface.SetDrawColor(255, 255, 255, 0)
             surface.DrawRect(0, 0, w, h)
-
             Derma_DrawBackgroundBlur(self, CurTime())
         end
 
         hook.Add("Think", "VerifierEchap", function()
-            if input.IsKeyDown(KEY_ESCAPE) then
-                print('yo on rentre dedans')
-                parentPanel:Remove()
+            if input.IsKeyDown(KEY_ESCAPE) and menuOuvert == true then
+                print("yo on rentre dedans")
                 menuOuvert = false
+                parentPanel:Remove()
                 hook.Remove("Think", "VerifierEchap")
             end
         end)
 
         local frame = CreerFrameMenuAnim(parentPanel)
-
-        local extensionPanel = CreerModelEtExtensionPanel(parentPanel, frame)
-
-        local closeButton = CreerButtonClose(parentPanel, frame)
-
+        extensionPanel = CreerModelEtExtensionPanel(parentPanel, frame)
+        closeButton = CreerButtonClose(parentPanel, frame)
         local scrollPanel = ImportScrollPanel(frame)
-
         local iconLayout = scrollPanel:Add("DIconLayout")
         iconLayout:SetSize(scrollPanel:GetWide(), scrollPanel:GetTall())
         iconLayout:SetSpaceX(5) -- Espacement horizontal entre les carrés
@@ -218,7 +218,6 @@ local function OuvrirMenuPanel()
             carre.OnCursorExited = function()
                 previewAnim = ""
             end
-
             if Config.ActivateIcon == true and config.icone and config.icone ~= "" then
                 local iconImage = vgui.Create("DImage", carre)
                 iconImage:SetSize(100, 100)
@@ -229,33 +228,36 @@ local function OuvrirMenuPanel()
             end
 
             carre.OnMousePressed = function()
-                if LocalPlayer():GetVelocity():LengthSqr() > 1 then
+                if LocalPlayer():GetVelocity():LengthSqr() > 1 or ply:InVehicle() or ply:Crouching() then
                     return -- Retourner si la vélocité du joueur est supérieure à 0
                 end
 
                 print("Carré cliqué! Action : " .. config.action)
-                local armePrecedente = IsValid(LocalPlayer():GetActiveWeapon()) and
-                                           LocalPlayer():GetActiveWeapon():GetClass() or ""
                 net.Start("DemanderAnimation")
                 net.WriteString(config.action)
 
-                if Config.LockCameraForAllAnimations == true then
-                    net.WriteBool(true)
-                else
-                    net.WriteBool(config.cameraLocked)
+                local lockedYaw = nil
+                if Config.LockCameraForAllAnimations == true or config.cameraLocked == true then
+                    ply = LocalPlayer()
                     originalViewAngle = LocalPlayer():EyeAngles()
+                    local eyeAngles = ply:EyeAngles()
+                    lockedYaw = eyeAngles.yaw
+                    yawOffset = Config.AngleMaxWhenLocked
                 end
+
                 net.SendToServer()
                 print("Message envoyé au serveur.")
 
-                local lockedYaw = nil
-                local yawOffset = Config.AngleMaxWhenLocked
-
-                net.Receive("BlockAtEyeTrace", function()
-                    -- Verrouiller l'angle de vue lorsque le joueur entre dans le hook
-                    local ply = LocalPlayer()
-                    local eyeAngles = ply:EyeAngles()
-                    lockedYaw = eyeAngles.yaw
+                hook.Add("CreateMove", "DisableUseKey", function(cmd)
+                    cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_USE)))
+                end)
+                timer.Simple(1, function()
+                    hook.Remove("CreateMove", "DisableUseKey")
+                end)
+                hook.Add("CreateMove", "BlockReload", function(cmd)
+                    if bit.band(cmd:GetButtons(), IN_RELOAD) ~= 0 then
+                        cmd:SetButtons(bit.band(cmd:GetButtons(), bit.bnot(IN_RELOAD)))
+                    end
                 end)
 
                 hook.Add("InputMouseApply", "LockToYawOnly", function(ccmd, x, y, angle)
@@ -264,59 +266,30 @@ local function OuvrirMenuPanel()
                         local currentAngle = ccmd:GetViewAngles()
                         local sensitivity = Config.LockedCamSensitivity -- Ajustez la sensibilité selon vos préférences
                         local horizontalOffset = Config.AngleMaxWhenLocked -- Offset autorisé horizontalement par rapport à l'angle verrouillé
-
+                        -- Inverser la direction de la rotation horizontale
+                        x = x * -1
                         -- Calculer le nouvel angle de vue en fonction du mouvement horizontal de la souris
                         local newYaw = currentAngle.yaw + x * sensitivity
-
                         -- Gérer les cas où l'angle dépasse une rotation complète (360 degrés)
-                        if newYaw - lockedYaw > 180 then
-                            lockedYaw = lockedYaw + 360
-                        elseif newYaw - lockedYaw < -180 then
-                            lockedYaw = lockedYaw - 360
-                        end
-
+                        lockedYaw = (newYaw - lockedYaw > 180) and (lockedYaw + 360) or
+                                        ((newYaw - lockedYaw < -180) and (lockedYaw - 360) or lockedYaw)
                         -- Limiter les angles de vue dans la plage autorisée autour de l'angle verrouillé
                         local minAngle = lockedYaw - horizontalOffset
                         local maxAngle = lockedYaw + horizontalOffset
                         local clampedYaw = math.Clamp(newYaw, minAngle, maxAngle)
-
                         -- Appliquer les nouveaux angles de vue
                         ccmd:SetViewAngles(Angle(currentAngle.pitch, clampedYaw, currentAngle.roll))
-
                         return true
                     end
                 end)
 
-                hook.Add("Think", "SurveillerMouvementEtArmePourAnimation", function()
-
-                    if ply:Alive() and config.sleepingAnimation then
-                        sleepingAnim()
-                    end
-                    local joueur = LocalPlayer()
-
-                    -- Vérifier si le joueur a bougé rapidement, changé d'arme ou s'est accroupi
-                    local armeActuelle = IsValid(joueur:GetActiveWeapon()) and joueur:GetActiveWeapon():GetClass() or ""
-                    local estAccroupi = joueur:Crouching()
-                    local nAppuiePasSurUse = joueur:KeyDown(IN_USE)
-
-                    if config.IsWalkable == true and Config.isWalkableAllowedForAllAnims == true then
-                        MaxVelForAction = Config.ActionWalkableVel
-                    else
-                        MaxVelForAction = Config.MaxDefaultActionVel
-                    end
-                    if joueur:GetVelocity():Length() > MaxVelForAction or
-                        (armePrecedente ~= armeActuelle and armeActuelle ~= Config.SwepHand) or estAccroupi or
-                        nAppuiePasSurUse then
-                        hook.Remove("InputMouseApply", "LockToYawOnly")
-                        net.Start("ReinitialiserOsDemande")
-                        net.SendToServer()
-                        net.Receive("CallbackReset", function()
-                            RetirerSurveillanceApresReponse()
-                        end)
-                        hook.Add("GetCmdAndResetViewAngle", "RetirerLeHookApresExec", myHook)
-
-                    end
+                net.Receive("VerifServeurSurveillance", function()
+                    hook.Remove("InputMouseApply", "LockToYawOnly")
+                    hook.Remove("CreateMove", "BlockReload")
+                    ResetBonesEtRetirerLeHook()
+                    hook.Add("GetCmdAndResetViewAngle", "RetirerLeHookApresExec", myHook)
                 end)
+
                 parentPanel:Remove()
                 menuOuvert = false
             end
@@ -327,9 +300,16 @@ local function OuvrirMenuPanel()
     end
 end
 
+hook.Add("StartChat", "HasStartedTyping", function(isTeamChat)
+    chatOpen = true
+end)
+hook.Add("FinishChat", "HasStoppedTyping", function()
+    chatOpen = false
+end)
 local function VerifierTouchePressee()
-    if input.IsKeyDown(Config.KeyBind) then
-        OuvrirMenuPanel()
+    local ply = LocalPlayer()
+    if input.IsKeyDown(KEY_G) and not ply:InVehicle() and ply:Alive() and chatOpen == false then
+        OuvrirMenuPanel() -- Ouvrir le menu
     end
 end
 
@@ -339,6 +319,49 @@ end)
 net.Receive("ToggleFirstPerson", function()
     RunConsoleCommand("firstperson")
 end)
-
 hook.Add("Think", "VerifierTouchePressee", VerifierTouchePressee)
+local function OnPlayerNetworkedVarChanged(ent, name, oldVal, newVal)
+    print("Le joueur " .. ent:Nick() .. " a changé la valeur de la netvar '" .. name .. "' de '" .. tostring(oldVal) ..
+              "' à '" .. tostring(newVal) .. "'.")
+    if name == "AnimName" and ent:IsPlayer() and ent:Alive() then
+        if newVal == "Empty" then
+            GetBonesAnglesPositionsAndResetThem(ent)
+            if ent == LocalPlayer() then
+                hook.Remove("InputMouseApply", "LockToYawOnly")
+                net.Start("ResetCamOnSameAnim")
+                net.SendToServer()
+            else
+                print("Aren't concerned by anim reset")
+            end
 
+            if oldVal == "sleeping" and ent:Alive() then
+                timer.Remove("SleepingParticleEmitterTimer_" .. ent:EntIndex()) -- Retire le timer spécifique à cette entité
+            end
+        else
+            if configurationsAnimation[newVal] then
+                if oldVal ~= "Empty" then
+                    -- resetting bones before new anim to avoid glitching
+                    GetBonesAnglesPositionsAndResetThem(ent)
+                end
+
+                if newVal == "sleeping" and ent:Alive() then
+                    local timerName = "SleepingParticleEmitterTimer_" .. ent:EntIndex() -- Nom unique du timer pour cette entité
+                    timer.Create(timerName, 1, 0, function()
+                        sleepingAnim(ent)
+                    end)
+                else
+                    local timerName = "SleepingParticleEmitterTimer_" .. ent:EntIndex() -- Nom unique du timer pour cette entité
+                    timer.Remove(timerName)
+                end
+
+                -- Appelez la fonction ManipulateBoneOnShared avec les informations nécessaires
+                ManipulateBoneOnShared(ent, newVal)
+            end
+        end
+    else
+        print("error")
+    end
+end
+
+-- Ajoutez le hook pour surveiller les changements de netvars du joueur local
+hook.Add("EntityNetworkedVarChanged", "MonitorPlayerNetworkedVarChanges", OnPlayerNetworkedVarChanged)

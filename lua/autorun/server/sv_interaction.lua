@@ -1,123 +1,164 @@
 include("autorun/sh_interaction.lua")
 include("autorun/config/anims_pos.lua")
+include("autorun/config/anims_hud.lua")
 include("autorun/config/config.lua")
-
 util.AddNetworkString("DemanderAnimation")
 util.AddNetworkString("ReinitialiserOsDemande")
 util.AddNetworkString("ToggleThirdPerson")
 util.AddNetworkString("ToggleFirstPerson")
-util.AddNetworkString("BlockAtEyeTrace")
-util.AddNetworkString("CallbackReset")
-
+util.AddNetworkString("LockCameraOfThePlayer")
+util.AddNetworkString("ResetCamOnSameAnim")
+util.AddNetworkString("UpdateWeaponChange")
+util.AddNetworkString("VerifServeurSurveillance")
+AddCSLuaFile("autorun/config/anims_hud.lua")
+AddCSLuaFile("autorun/config/anims_pos.lua")
+AddCSLuaFile("autorun/config/config.lua")
 local ancienneArme = ""
+hook.Add("PlayerSwitchWeapon", "DetecterChangementArme", function(ply, oldWeapon, newWeapon)
+    local animName = ply:GetNW2String("AnimName")
+    print(animName)
+    if ply:IsValid() and animName ~= nil and animName ~= "Empty" then
+        if newWeapon:GetClass() == Config.SwepHand then
+            return
+        else
+            return true
+        end
+    end
+end)
+
+hook.Add("PlayerInitialSpawn", "SetEmptyAnimName", function(ply)
+    ply:SetNW2String("AnimName", "Empty")
+end)
+
+hook.Add("PlayerDeath", "ResetPlayerAnimationName", function(victim, inflictor, attacker)
+    victim:SetNW2String("AnimName", "Empty")
+end)
+
+local surveillanceStates = {}
+local function SurveillancePlayer(ply, isWalkable)
+    -- Vérifie si la surveillance est active pour ce joueur
+    if surveillanceStates[ply] == true or not ply:Alive() then
+        hook.Remove("Tick", "SurveillancePlayer_" .. ply:EntIndex()) -- Retire le hook spécifique à ce joueur
+        surveillanceStates[ply] = nil -- Supprime l'état de surveillance pour ce joueur
+        return
+    end
+
+    if IsValid(ply) and ply:Alive() then
+        local estAccroupi = ply:Crouching()
+        local AppuiePasSurUse = ply:KeyDown(IN_USE)
+        local AppuiePasSurReload = ply:KeyDown(IN_RELOAD)
+        local velocityLength = ply:GetVelocity():Length()
+
+        -- reintegrer les velocité max
+        if isWalkable == true and Config.isWalkableAllowedForAllAnims == true then
+            MaxVelForAction = Config.ActionWalkableVel
+        else
+            MaxVelForAction = Config.MaxDefaultActionVel
+        end
+
+        if velocityLength > MaxVelForAction or estAccroupi or AppuiePasSurUse or AppuiePasSurReload then
+            print(MaxVelForAction, "malvellll")
+            net.Start("VerifServeurSurveillance")
+            net.Send(ply)
+            surveillanceStates[ply] = true -- Marque le joueur comme surveillé
+        end
+    end
+end
+
+local function DeclencherLeHookDeSurveillance(ply, typeAnimation)
+    -- Vérifie si le joueur est valide
+    if IsValid(ply) then
+        -- Définir le hook SetupMove uniquement pour ce joueur
+        hook.Add("SetupMove", "MySpeed_" .. ply:EntIndex(), function(ply, mv)
+            -- Vérifie si c'est le bon joueur
+            mv:SetMaxClientSpeed(1)
+            mv:SetButtons(bit.band(mv:GetButtons(), bit.bnot(bit.bor(IN_JUMP, IN_DUCK))))
+        end)
+
+        -- Vérifie si le joueur est déjà surveillé, s'il ne l'est pas, ajoute la surveillance
+        if not surveillanceStates[ply] then
+            local isWalkable -- Déclarer la variable isWalkable à l'extérieur de la boucle for
+            for _, animation in ipairs(anim_config) do
+                if animation.action == typeAnimation then
+                    isWalkable = animation.IsWalkable -- Assigner la valeur à la variable isWalkable
+                    print("IsWalkable pour", typeAnimation, ":", isWalkable)
+                    break
+                end
+            end
+
+            -- Ajouter un hook Tick pour surveiller le joueur spécifique
+            hook.Add("Tick", "SurveillancePlayer_" .. ply:EntIndex(), function()
+                SurveillancePlayer(ply, isWalkable)
+            end)
+
+            surveillanceStates[ply] = false -- Initialise l'état de surveillance pour ce joueur
+        end
+    end
+end
 
 -- Fonction pour réinitialiser les os
 local function ReinitialiserOs(ply, restaurerArme, disableCam)
-    if restaurerArme and Config.getLastWeapon == true then
-        print("set ancienne arme" .. ancienneArme)
-        ply:SelectWeapon(ancienneArme) -- Sauvegarder l'arme actuelle
-    end
     if not disableCam then
         net.Start("ToggleFirstPerson")
         net.Send(ply)
     end
 
-    ply:SetNWBool("EnAnimation", false)
-    ply:SetNWString("TypeAnimation", "") -- Réinitialiser le type d'animation à une chaîne vide
-    local nombreOs = ply:GetBoneCount()
-    for i = 0, nombreOs - 1 do
-        ply:ManipulateBoneAngles(i, Angle(0, 0, 0))
-        ply:ManipulateBonePosition(i, Vector(0, 0, 0))
+    ply:SetNW2String("AnimName", "Empty") -- Réinitialiser le type d'animation à une chaîne vide
+    if restaurerArme and Config.getLastWeapon == true then
+        print("set ancienne arme " .. ancienneArme)
+        ply:SelectWeapon(ancienneArme) -- Sauvegarder l'arme actuelle
     end
-
 end
 
 net.Receive("DemanderAnimation", function(len, ply)
     local typeAnimation = net.ReadString()
-    local isCameraLocked = net.ReadBool()
+    local ActiveWeapon = ply:GetActiveWeapon()
+    if IsValid(ActiveWeapon) and ActiveWeapon.FistsOut == true then
+        ActiveWeapon:FistsDown()
+        ActiveWeapon:Reload()
+    end
 
-    print("Demande d'animation " .. typeAnimation .. " reçue du client.")
+    if IsValid(ActiveWeapon) then
+        ancienneArme = ActiveWeapon:GetClass()
+    else
+        ancienneArme = nil
+    end
+
+    surveillanceStates[ply] = false -- Réinitialise l'état de surveillance pour ce joueur
+    DeclencherLeHookDeSurveillance(ply, typeAnimation)
+    if typeAnimation == ply:GetNW2String("AnimName") then
+        ply:SetNW2String("AnimName", "Empty")
+    else
+        ply:SetNW2String("AnimName", typeAnimation)
+        if ply:GetNW2String("AnimName") == typeAnimation then
+            print("Successfully Set NW2 Value")
+        else
+            print("Couldn't Set NW2 Value : Previous netstring may be null, here is the actual value: " ..
+                      ply:GetNW2String("AnimName"))
+        end
+    end
 
     if IsValid(ply) and ply:IsPlayer() then
-        if ply:GetNWBool("EnAnimation") then
-            -- Vérifier si l'animation demandée est la même que celle en cours
-            if ply:GetNWString("TypeAnimation") == typeAnimation then
-                print("La même animation est déjà en cours, réinitialisation des os uniquement.")
-                ReinitialiserOs(ply)
-                -- Important : Retourner ici pour ne pas relancer la même animation
-                return
-            else
-                print(
-                    "Une autre animation est en cours, réinitialisation des os avant de lancer la nouvelle animation.")
-                ReinitialiserOs(ply, false, true)
-            end
-        end
-
-        ancienneArme = ply:GetActiveWeapon():GetClass()
-
         if not ply:HasWeapon(Config.SwepHand) then
             ply:Give(Config.SwepHand)
         end
-
         ply:SelectWeapon(Config.SwepHand)
-
-        if configurationsAnimation[typeAnimation] then
-            ply:SetNWBool("EnAnimation", true)
-            ply:SetNWString("TypeAnimation", typeAnimation) -- Stocker le type d'animation en cours
-
-            net.Start("ToggleThirdPerson")
-            net.Send(ply)
-
-            for nomOs, value in pairs(configurationsAnimation[typeAnimation]) do
-
-                local idOs = ply:LookupBone(nomOs)
-                if idOs then
-                    -- Manipuler l'angle si il est spécifié
-                    if type(value) == "table" then
-                        if isCameraLocked == true then
-                            net.Start("BlockAtEyeTrace")
-                            net.Send(ply)
-                        end
-
-                        local angleInitial = ply:GetManipulateBoneAngles(idOs)
-                        local angleFinal = value.Angle or angleInitial -- Utiliser l'angle initial si aucun angle n'est spécifié
-                        local position = value.Position -- Récupérer la position si elle est spécifiée
-
-                        local startTime = CurTime()
-                        local duration = 0.5 -- Durée de l'animation en secondes (à ajuster selon vos besoins)
-
-                        timer.Create("Animation_" .. nomOs, 0.01, math.ceil(duration / 0.01), function()
-                            local elapsedTime = CurTime() - startTime
-                            local progress = math.min(1, elapsedTime / duration) -- Progression de l'animation de 0 à 1
-
-                            -- Interpolation entre l'angle initial et l'angle final
-                            local lerpedAngle = LerpAngle(progress, angleInitial, angleFinal)
-
-                            ply:ManipulateBoneAngles(idOs, lerpedAngle)
-
-                            -- Manipuler la position si elle est spécifiée
-                            if position then
-                                ply:ManipulateBonePosition(idOs, position)
-                            end
-
-                            if progress >= 1 then
-                                timer.Remove("Animation_" .. nomOs) -- Supprimer le timer une fois l'animation terminée
-                            end
-                        end)
-                    end
-                end
-            end
-        end
-
+        net.Start("ToggleThirdPerson")
+        net.Send(ply)
     end
 end)
 
 net.Receive("ReinitialiserOsDemande", function(len, ply)
     if IsValid(ply) and ply:IsPlayer() then
+        print("Surveillance détecté reçue du joueur " .. ply:Nick())
         ReinitialiserOs(ply, true)
-
-        net.Start("CallbackReset")
-        net.Send(ply)
     end
 end)
 
+net.Receive("ResetCamOnSameAnim", function(len, ply)
+    if IsValid(ply) and ply:IsPlayer() and not disableCam then
+        net.Start("ToggleFirstPerson")
+        net.Send(ply)
+        print("Surveillance détecté reçue du joueur cam" .. ply:Nick())
+    end
+end)
